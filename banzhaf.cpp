@@ -2,17 +2,17 @@
 *    int_kidney_exchange
 *	 banzhaf.cpp
 *    Purpose: computational study for
-*             M. Benedek, P. Biró, W. Kern and D. Paulusma (2022)
+*             M. Benedek, P. BirÃ³, W. Kern and D. Paulusma (2022)
 *			  Computing Balanced Solutions for Large Kidney Exchange Schemes
 *             https://dl.acm.org/doi/10.5555/3535850.3535861
 *			  and for
-*			  M. Benedek, P. Biró, D. Paulusma and X. Ye (2023)
+*			  M. Benedek, P. BirÃ³, D. Paulusma and X. Ye (2023)
 *			  Computing Balanced Solutions for Large Kidney Exchange Schemes
 *			  https://arxiv.org/abs/2109.06788
 *
 *             Banzhaf value allocation with equal country sizes
 *
-*    @author Márton Benedek
+*    @author MÃ¡rton Benedek
 *    @version 1.0 21/03/2023
 *
 *    This program is free software: you can redistribute it and/or modify
