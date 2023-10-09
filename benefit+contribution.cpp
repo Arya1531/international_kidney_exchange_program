@@ -8,7 +8,7 @@
 *             benefit and contribution value allocations with equal country sizes
 *
 *    @author Xin Ye
-*    @version 1.0 19/10/2021
+*    @version 1.0 09/10/2023
 *
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
