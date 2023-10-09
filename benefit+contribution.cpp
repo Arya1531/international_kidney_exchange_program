@@ -1,13 +1,13 @@
 /*
 *    int_kidney_exchange
-*    contrib_bene_eqsize.cpp
+*    benefit+contribution.cpp
 *    Purpose: computational study for
 *             Benedek et al. (2021) - Computing Balanced Solutions for
 *             Large Kidney Exchange Schemes
 *             https://arxiv.org/abs/2109.06788
 *             benefit and contribution value allocations with equal country sizes
 *
-*    @author Marton Benedek
+*    @author Xin Ye
 *    @version 1.0 19/10/2021
 *
 *    This program is free software: you can redistribute it and/or modify
