@@ -12,8 +12,8 @@
 *
 *             Banzhaf value allocation with equal country sizes
 *
-*    @author Márton Benedek
-*    @version 1.0 21/03/2023
+*    @author Xin Ye
+*    @version 1.0 09/10/2023
 *
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
