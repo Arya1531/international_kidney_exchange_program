@@ -1,14 +1,14 @@
 /*
 *    int_kidney_exchange
-*    shapley_nucl_eqsize.cpp
+*    shapley+nucleolus.cpp
 *    Purpose: computational study for
 *             Benedek et al. (2021) - Computing Balanced Solutions for
 *             Large Kidney Exchange Schemes
 *             https://arxiv.org/abs/2109.06788
 *             Shapley value and nucleolus allocations with equal country sizes
 *
-*    @author Marton Benedek
-*    @version 1.0 19/10/2021
+*    @author Xin Ye
+*    @version 1.0 09/10/2023
 *
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
