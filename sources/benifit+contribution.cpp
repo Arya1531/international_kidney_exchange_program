@@ -1,28 +1,23 @@
 /*
 *    int_kidney_exchange
-*    contrib_bene_eqsize.cpp
-*    Purpose: computational study for
-*             Benedek et al. (2021) - Computing Balanced Solutions for
-*             Large Kidney Exchange Schemes
-*             https://arxiv.org/abs/2109.06788
-*             benefit and contribution value allocations with equal country sizes
+*    contribution+benefit.cpp
+*    Purpose: computational study for Computing Balanced Solutions for Large International Kidney
+*			  Exchange Schemes When Cycle Length Is Unbounded
+*             using the benefit and contribution value as initial allocations with equal country sizes
 *
-*    @author Marton Benedek
-*    @version 1.0 19/10/2021
+*    @author Xin Ye
+*    @version 1.0 09/10/2023
 *
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
 *    the Free Software Foundation, either version 3 of the License, or
-*    (at your option) any later version.
+*    (at your option) any later version and the Gurobi License.
 *
 *    This program is distributed in the hope that it will be useful,
 *    but WITHOUT ANY WARRANTY; without even the implied warranty of
 *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 *    GNU General Public License for more details.
 *
-*    You should have received a copy of the GNU General Public License
-*    along with this program. If not, see:
-*    <https://github.com/blrzsvrzs/int_kidney_exchange>.
 */
 
 #include <iostream>
@@ -64,8 +59,6 @@ void initial_pairs(unsigned short int& Vp, unsigned short int& N, ListGraph::Nod
 void period_0(unsigned short int& Q, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, vector<unsigned short int>& s, unsigned short int& Vp, vector<unsigned short int>& node_arrives, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, vector<double>& credit, unsigned short int& initialSize, vector<bool>& leaving);
 void arrival_times(vector<unsigned short int>& node_arrives, unsigned short int& Vp, unsigned short int& N, ListGraph::NodeMap<bool>& active_nodes, vector<ListGraph::Node>& c, unsigned short int& periods);
 void changing_nodes(ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<bool>& leaving, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, unsigned short int& Vp, vector<unsigned short int>& node_arrives, unsigned short int& Q, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, vector<unsigned short int>& s, vector<double>& d, vector<double>& target);
-void de2bi(unsigned int& k, vector<bool>& a, unsigned short int& N);
-double core_dist(vector<double>& x, vector<double>& v_impu, vector<double>& v_S, unsigned short int& N, unsigned int& S);
 void ILP_d1_gurobi(unsigned short int& Q, unsigned short int& N, ListDigraph& g_original, unsigned short int& Vp, vector<unsigned short int>& node_arrives, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<pair<int, int>>& arc_pair, vector<int>& nodeset, vector<vector<unsigned short int>>& actual_alloc, double& M, double& M_total, vector<unsigned short int>& s, vector<pair<int, int>>& cycle_distri, vector<double>& target, vector<bool>& leaving, vector<double>& d, double& d_total, bool& c_involved, vector<double>& credit, map<int, int>& cycle_dis, bool lex_min, unsigned short int inst, std::map<int, std::map<int, int>>& cycle_dis_period);
 void pair_arcs(unsigned short int& Q, ListDigraph& g_original, vector<unsigned short int>& node_arrives, ListDigraph::NodeMap<bool>& active_nodes_original, vector<pair<int, int>>& arc_pair, vector<int>& nodeset);
 void lex_min_d_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, unsigned short int& Vp, vector<pair<int, int>>& arc_pair, vector<double>& target, vector<double>& credit, vector<GRBVar>& var_lexmin, vector<GRBModel>& vector_model, unsigned short int& track);
@@ -78,12 +71,45 @@ double frac(double ori);
 int main() {
 	try {
 		std::cout << "I solemnly swear that I am up to no good." << endl;
-		bool target_omega = false; // true: benefit value, false: constribution value
+		bool target_omega = true; // true: benefit value, false: constribution value
 		bool dispy = false; // true: information in terminal while running
 		bool disp = false; // true: extremely detailed information while running, avoid with large graphs
 		bool c_involved = false;// true: credits considred; false:without credits 
 		bool arbitray_maximum = false; //true: arbitray maximum cycple packing
 		bool lex_min = false;
+		string solution_concept;
+		string version;
+		bool d1 = true;
+		bool d_c = true;
+		bool lexmin_call = true;
+		bool lexmin_c_call = true;
+		bool arbitrary = true;
+		if (d1) {
+			version = "d1";
+		}
+		else {
+			if (lexmin_call) {
+				version = "lexmin_call";
+			}
+			if (lexmin_c_call) {
+				version = "lexmin_c_call";
+			}
+			if (d_c) {
+				version = "d_c";
+			}
+			if (arbitrary) {
+				version = "arbitrary";
+			}
+		}
+
+		if (target_omega) {
+			solution_concept = "benefit";
+			cout << solution_concept << endl;
+		}
+		else {
+			solution_concept = "contribution";
+			cout << solution_concept << endl;
+		}
 		unsigned short int years = 6;
 		unsigned short int periods_per_year = 4;
 		// input parameters and data
@@ -146,7 +172,7 @@ int main() {
 		vector<double> solution_concept_time_d1_c_N(12, 0);
 		vector<double> solution_concept_time_lexmin_N(12, 0);
 		vector<double> solution_concept_time_lexmin_c_N(12, 0);
-		for (N = 4; N <5 ; ++N) {
+		for (N = 4; N < 11; ++N) {
 			cycle_dis.clear();
 			cycle_dis_d.clear();
 			cycle_dis_t_c.clear();
@@ -204,34 +230,36 @@ int main() {
 				string line;
 				ifstream inp;
 				unsigned short int graph_size = 2000;
+				// read the data
 				inp.open("genxml-" + to_string(inst) + ".xml"); // 1 out of the 100 instances generated by William Pettersson's web tool: https://wpettersson.github.io/kidney-webapp/#/
 				getline(inp, line);
 				inp.close();
 
-				// building the (undirected) compatibility and the (directed) 'matching' graphs
+				
 				unsigned short int Vp = 4 * (unsigned short int)((graph_size / 4) / N);
-				//cout <<"Vp"<< Vp << endl;
 				unsigned short int no_of_nodes = N * Vp;
-				//cout << "no_of_nodes: "<<no_of_nodes << endl;
 				vector<unsigned int> arc_out(0, 0);
 				vector<unsigned int> arc_in(0, 0);
 				unsigned int m = 0;
 				unsigned short int k = 0;
-				unsigned short int M = 0;//changed by XY: maximum size of cycle packing
-				double M_total = 0;//changed by XY: maximum size of cycle packing
+				unsigned short int M = 0;
+				double M_total = 0;
 				vector<unsigned short int> node_labels(no_of_nodes, 0);
 				vector<unsigned short int> label_positions(graph_size, graph_size + 1);
 				unsigned int S = pow(2, N) - 2;
+				// biparite graph
 				ListGraph g;
-				ListDigraph g_original; //changed by XY, creating an original graph
+				// orginal compatibility graph
+				ListDigraph g_original; 
 				vector<ListGraph::Node> c(no_of_nodes);
-				vector<ListGraph::Node> c_b(no_of_nodes); //changed by XY, creating an independent set of vertices for the biparite graph
-				vector<ListDigraph::Node> c_original(no_of_nodes);//changed by XY, creating a node set for the original graph
+				vector<ListGraph::Node> c_b(no_of_nodes); 
+				vector<ListDigraph::Node> c_original(no_of_nodes);
 				double t0 = cpuTime();
+				// paste the data
 				xml_parser(line, node_labels, label_positions, c, c_b, c_original, k, g, g_original, arc_in, arc_out, m, no_of_nodes);
 				double t1 = cpuTime();
 				data_preparation += t1 - t0;
-				// determining starting pairs and arrival times of others
+				
 				unsigned short int periods = years * periods_per_year;
 				unsigned short int initialSize = Vp / 4;
 				vector<unsigned short int> no_of_active_nodes(N, initialSize); //initial active nodes for the period 0
@@ -252,12 +280,10 @@ int main() {
 				getline(seed_doc, line_seed);
 				seed_doc.close();
 				unsigned int seed = 0;
-				seed = stoi(line_seed); // for instance genxml-0.xml it is 18397106 for N=4, 20469263 for N=5, 22805501 for N=6, 25083567 for N=7, 27432197 for N=8, 30095162 for N=9, 33411331 for N=10, 6368187 for N=11, 13109406 for N=12, 23969593 for N=13, 43358281 for N=14, 79289906 for N=15
-				//inp.open("n" + to_string(N) + "inst" + to_string(inst) + ".txt");
-				//inp >> seed;
-				//inp.close();
-				//cout << seed;
+				seed = stoi(line_seed); 
 				srand(seed);
+
+				// determine starting pairs and arrival times of others
 				initial_pairs(Vp, N, active_nodes, active_nodes_original, c, c_b, c_original, initialSize);
 				vector<unsigned short int> node_arrives(no_of_nodes, 0);
 				arrival_times(node_arrives, Vp, N, active_nodes, c, periods);
@@ -268,8 +294,8 @@ int main() {
 				t0 = cpuTime();
 				ListGraph::EdgeMap<double> edge_card_weight(g, 0);
 				ListDigraph::ArcMap<unsigned short int> arc_card_weight(g_original, 0);
+				// build the graph
 				undi_lemon(m, arc_in, arc_out, label_positions, g, g_original, c, c_b, c_original, edge_card_weight, arc_card_weight, no_of_nodes);
-				//cout << "c.size(): "<<c.size() << '\n' << "c_b.size(): "<<c_b.size() << endl;
 				t1 = cpuTime();
 				graph_building += t1 - t0;
 
@@ -286,26 +312,9 @@ int main() {
 				vector<vector<double>> init_alloc_d1(periods, vector<double>(N, 0));
 				vector<vector<double>> init_alloc_rand(periods, vector<double>(N, 0));
 				vector<double> credit(N, 0);
-				//vector<unsigned short int> w(N, 0);
 				vector<bool> leaving(no_of_nodes, false);
 				unsigned short int Q = 0;
 
-				/*vector<unsigned short int> s_ideal(N, 0);
-				vector<double> init_alloc_ideal(N, 0);
-				vector<unsigned short int> s_ideal_d1(N, 0);*/
-				//double ideal_time = 0;
-				//double ideal_d1_time = 0;
-				//t0 = cpuTime();
-				//ideal_matching(S, g_ideal, N, Vp, c, target_omega, disp, dispy, prec, y, pos, w, p, lb, ub, opt, no_of_nodes, s_ideal, t0, d1, init_alloc_ideal, s_ideal_d1, ideal_time, ideal_d1_time, v_impu);
-				//ideal_time += init_time + read_time + rand_time + graph_time;
-				//ideal_d1_time += init_time + read_time + rand_time + graph_time;
-				//cout << "ideal time: " << ideal_time << "\n" << "ideal_d1_time: " << ideal_d1_time << endl;
-				//cout << "ideal done... ";
-				//t0 = cpuTime();
-
-				//LMC(Q, periods, dispy, N, no_of_active_nodes, g, v, s, c, c_b, disp, S, leaving, active_nodes, Vp, t1, game_time, target_omega, t0, target, prec, target_time,  I1, I11, I2, edge_card_weight, y, pos, w, p, lb, ub, opt, d1, credit, matching_time, actual_alloc_LMC, node_arrives, v_impu);
-				//double LMC_time = init_time + game_time + target_time + matching_time + read_time + rand_time + graph_time;
-				//cout << "lexmin+c done... ";
 
 				//set the active nodes for the period 0
 				period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit, initialSize, leaving);
@@ -320,79 +329,89 @@ int main() {
 				double max_d = 0;
 
 				//------------arbitray maximum cycle packing----------------
-				/*arbitray_maximum = true;
-				period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit, initialSize, leaving);
-				t0 = cpuTime();
-				arbitraryMaximum(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, target_omega, target, credit, edge_card_weight, t0, actual_alloc, v_impu, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_arbitrary, numofMaxSolution, arbitray_maximum, initialSize, v_S, S, core_100, negative_core, inst, max_d, game_generation_arbitrary, solution_concept_time_arbitrary, cycle_dis_arbitrary_period);
-				t1 = cpuTime();
-				total_time_arbitrary += t1 - t0;
-				arbitray_maximum = false;
-				M_100_d_arbitrary += M_total;
-				//core_d_arbitrary += core_100;
-				//negative_core_d_arbitrary += negative_core;
-				relative_d1_arbitrary += (d_total / M_total);
-				max_d1_arbitrary+=max_d;
-				std::cout << N << "countries" << " " << "instance_" << inst << "arbitrary done...";*/
+				if (arbitrary) {
+					std::cout << N << "countries" << " " << "instance_" << inst << "starts arbitrary" << endl;
+					arbitray_maximum = true;
+					period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit, initialSize, leaving);
+					t0 = cpuTime();
+					arbitraryMaximum(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, target_omega, target, credit, edge_card_weight, t0, actual_alloc, v_impu, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_arbitrary, numofMaxSolution, arbitray_maximum, initialSize, v_S, S, core_100, negative_core, inst, max_d, game_generation_arbitrary, solution_concept_time_arbitrary, cycle_dis_arbitrary_period);
+					t1 = cpuTime();
+					total_time_arbitrary += t1 - t0;
+					arbitray_maximum = false;
+					M_100_d_arbitrary += M_total;
+					//core_d_arbitrary += core_100;
+					//negative_core_d_arbitrary += negative_core;
+					relative_d1_arbitrary += (d_total / M_total);
+					max_d1_arbitrary += max_d;
+					std::cout << N << "countries" << " " << "instance_" << inst << "arbitrary done...";
+				}
 				//---------d1----------
-				/*std::cout << "start minimizing d_1" << endl;
-				period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit, initialSize, leaving);
-				t0 = cpuTime();
-				min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, target_omega, target, credit, edge_card_weight, t0, actual_alloc, v_impu, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_d, numofMaxSolution, arbitray_maximum, initialSize, v_S, S, core_100, negative_core, d_c_total, inst, lex_min, max_d, game_generation_d1, solution_concept_time_d1, time_d1, cycle_dis_d_period, cycle_dis_arbitrary_period);
-				t1 = cpuTime();
-				total_time_d1 += t1 - t0;
-				cout << "total_time_d1: " << total_time_d1 << endl;
-				//cout << "negative core: " << negative_core;
-				relative_d1 += (d_total / M_total);
-				max_d1 += max_d;
-				std::cout << "relative_d1: " << relative_d1 << endl;
-				std::cout << "the number of countries: " << N << " " << "relative_d1" << " " << inst << " " << relative_d1 / (inst + 1) << endl;
-				M_100 += M_total;
-				std::cout << "the number of countries: " << N << " " << "relative_d1" << " " << inst << " " << M_100 / (inst + 1);
-				//core_d += core_100;
-				//negative_core_d += negative_core;
-				std::cout << N << "countries" << " " << "instance_" << inst << "d1 done...";
+				if (d1) {
+					std::cout << N << "countries" << " " << "instance_" << inst << "starts d1" << endl;
+					period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit, initialSize, leaving);
+					t0 = cpuTime();
+					min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, target_omega, target, credit, edge_card_weight, t0, actual_alloc, v_impu, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_d, numofMaxSolution, arbitray_maximum, initialSize, v_S, S, core_100, negative_core, d_c_total, inst, lex_min, max_d, game_generation_d1, solution_concept_time_d1, time_d1, cycle_dis_d_period, cycle_dis_arbitrary_period);
+					t1 = cpuTime();
+					total_time_d1 += t1 - t0;
+					cout << "total_time_d1: " << total_time_d1 << endl;
+					relative_d1 += (d_total / M_total);
+					max_d1 += max_d;
+					std::cout << "relative_d1: " << relative_d1 << endl;
+					std::cout << "the number of countries: " << N << " " << "relative_d1" << " " << inst << " " << relative_d1 / (inst + 1) << endl;
+					M_100 += M_total;
+					std::cout << "the number of countries: " << N << " " << "relative_d1" << " " << inst << " " << M_100 / (inst + 1);
+					std::cout << N << "countries" << " " << "instance_" << inst << "d1 done...";
+				}
+				
 				// -----------d1+c----------------
-				c_involved = true;
-				period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit, initialSize, leaving);
-				t0 = cpuTime();
-				min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, target_omega, target, credit, edge_card_weight, t0, actual_alloc, v_impu, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_t_c, numofMaxSolution, arbitray_maximum, initialSize, v_S, S, core_100, negative_core, d_c_total, inst, lex_min, max_d, game_generation_d1_c, solution_concept_time_d1_c, time_d1_c, cycle_dis_t_c_period, cycle_dis_arbitrary_period);
-				t1 = cpuTime();
-				total_time_d1_c += t1 - t0;
-				c_involved = false;
-				M_100_d_c += M_total;
-				//core_d_c += core_100;
-				//negative_core_d_c += negative_core;
-				relative_d1_c += (d_total / M_total);
-				max_d1_c += max_d;
-				std::cout << N << "countries" << " " << "instance_" << inst << "d1+c done...";*/
+				if (d_c) {
+					std::cout << N << "countries" << " " << "instance_" << inst << "starts d1+c" << endl;
+					c_involved = true;
+					period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit, initialSize, leaving);
+					t0 = cpuTime();
+					min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, target_omega, target, credit, edge_card_weight, t0, actual_alloc, v_impu, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_t_c, numofMaxSolution, arbitray_maximum, initialSize, v_S, S, core_100, negative_core, d_c_total, inst, lex_min, max_d, game_generation_d1_c, solution_concept_time_d1_c, time_d1_c, cycle_dis_t_c_period, cycle_dis_arbitrary_period);
+					t1 = cpuTime();
+					total_time_d1_c += t1 - t0;
+					c_involved = false;
+					M_100_d_c += M_total;
+					relative_d1_c += (d_total / M_total);
+					max_d1_c += max_d;
+					std::cout << N << "countries" << " " << "instance_" << inst << "d1+c done...";
+				}
+				
 				//-----------------lexmin-----------------
-				std::cout << N << "countries" << " " << "instance_" << inst << "lexmin starts...";
-				lex_min = true;
-				period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit, initialSize, leaving);
-				t0 = cpuTime();
-				min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, target_omega, target, credit, edge_card_weight, t0, actual_alloc, v_impu, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_lexmin, numofMaxSolution, arbitray_maximum, initialSize, v_S, S, core_100, negative_core, d_c_total, inst, lex_min, max_d, game_generation_lexmin, solution_concept_time_lexmin, time_lex_min, cycle_dis_lexmin_period, cycle_dis_arbitrary_period);
-				t1 = cpuTime();
-				total_time_lex_min += t1 - t0;
-				relative_lexmin_0 += (d_total / M_total);
-				max_lexmin_0 += max_d;
-				lex_min = false;
-				M_lex_min += M_total;
-				std::cout << N << "countries" << " " << "instance_" << inst << "relative deviation" << d_total / M_total << "lexmin done...";
+				if (lexmin_call) {
+					std::cout << N << "countries" << " " << "instance_" << inst << "lexmin starts...";
+					lex_min = true;
+					period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit, initialSize, leaving);
+					t0 = cpuTime();
+					min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, target_omega, target, credit, edge_card_weight, t0, actual_alloc, v_impu, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_lexmin, numofMaxSolution, arbitray_maximum, initialSize, v_S, S, core_100, negative_core, d_c_total, inst, lex_min, max_d, game_generation_lexmin, solution_concept_time_lexmin, time_lex_min, cycle_dis_lexmin_period, cycle_dis_arbitrary_period);
+					t1 = cpuTime();
+					total_time_lex_min += t1 - t0;
+					relative_lexmin_0 += (d_total / M_total);
+					max_lexmin_0 += max_d;
+					lex_min = false;
+					M_lex_min += M_total;
+					std::cout << N << "countries" << " " << "instance_" << inst << "relative deviation" << d_total / M_total << "lexmin done...";
+				}
 				//-----------------lexmin+c----------------
-				/*std::cout << N << "countries" << " " << "instance_" << inst << "lexmin+c starts...";
-				lex_min = true;
-				c_involved = true;
-				period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit, initialSize, leaving);
-				t0 = cpuTime();
-				min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, target_omega, target, credit, edge_card_weight, t0, actual_alloc, v_impu, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_lexmin_c, numofMaxSolution, arbitray_maximum, initialSize, v_S, S, core_100, negative_core, d_c_total, inst, lex_min, max_d, game_generation_lexmin_c, solution_concept_time_lexmin_c, time_lex_min_c, cycle_dis_lexmin_c_period, cycle_dis_arbitrary_period);
-				t1 = cpuTime();
-				total_time_lex_min_c += t1 - t0;
-				relative_lexmin_c_0 += (d_total / M_total);
-				max_lexmin_c_0 += max_d;
-				lex_min = false;
-				c_involved = false;
-				M_lex_min_c += M_total;
-				std::cout << N << "countries" << " " << "instance_" << inst << "relative deviation" << d_total / M_total << "lexmin+c done...";*/
+				if (lexmin_c_call) {
+					std::cout << N << "countries" << " " << "instance_" << inst << "lexmin+c starts...";
+					lex_min = true;
+					c_involved = true;
+					period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit, initialSize, leaving);
+					t0 = cpuTime();
+					min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, target_omega, target, credit, edge_card_weight, t0, actual_alloc, v_impu, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_lexmin_c, numofMaxSolution, arbitray_maximum, initialSize, v_S, S, core_100, negative_core, d_c_total, inst, lex_min, max_d, game_generation_lexmin_c, solution_concept_time_lexmin_c, time_lex_min_c, cycle_dis_lexmin_c_period, cycle_dis_arbitrary_period);
+					t1 = cpuTime();
+					total_time_lex_min_c += t1 - t0;
+					relative_lexmin_c_0 += (d_total / M_total);
+					max_lexmin_c_0 += max_d;
+					lex_min = false;
+					c_involved = false;
+					M_lex_min_c += M_total;
+					std::cout << N << "countries" << " " << "instance_" << inst << "relative deviation" << d_total / M_total << "lexmin+c done...";
+				}
+				
 			}
 			relative_d1_N[N - 4] = relative_d1 / 100;
 			relative_d1_N_c[N - 4] = relative_d1_c / 100;
@@ -404,12 +423,6 @@ int main() {
 			max_arbitrary_N[N - 4] = max_d1_arbitrary / 100;
 			max_lexmin[N - 4] = max_lexmin_0 / 100;
 			max_lexmin_c[N - 4] = max_lexmin_c_0 / 100;
-			/*core_dis_N[N - 4] = core_d / 100;
-			core_dis_N_c[N - 4] = core_d_c / 100;
-			core_dis_N_arbitrary[N - 4] = core_d_arbitrary / 100;
-			out_of_core[N - 4] = negative_core_d;
-			out_of_core_c[N - 4] = negative_core_d_c;
-			out_of_core_arbitrary[N - 4] = negative_core_d_arbitrary;*/
 			M_N[N - 4] = M_100 / 100;
 			M_N_d_c[N - 4] = M_100_d_c / 100;
 			M_N_d_arbitrary[N - 4] = M_100_d_arbitrary / 100;
@@ -438,7 +451,7 @@ int main() {
 			solution_concept_time_lexmin_N[N - 4] = solution_concept_time_lexmin / 100;
 			solution_concept_time_lexmin_c_N[N - 4] = solution_concept_time_lexmin_c / 100;
 			ofstream res;
-			res.open("contribution/results_contribution.txt", ofstream::out | ofstream::trunc);
+			res.open(solution_concept+"/"+version+"/results.txt", ofstream::out | ofstream::trunc);
 			for (unsigned short int i = 0; i < N - 3; i++) {
 				res << i + 4 << "countries" << endl;
 				res << "data preparation: " << data_preparation_N[i] << endl;
@@ -450,8 +463,6 @@ int main() {
 				res << "scenario time: " << time_d1_N[i] << endl;
 				res << "game generation: " << game_generation_d1_N[i] << endl;
 				res << "solution concept: " << solution_concept_time_d1_N[i] << endl;
-				//res << "core distance: " << core_dis_N[i] << endl;
-				//res << "out_of_core: " << out_of_core[i] << endl;
 				res << "minimizing d_1_c: " << relative_d1_N_c[i] << endl;
 				res << "minimizing max_d_1_c: " << max_d1_N_c[i] << endl;
 				res << "average number of transplants_c: " << M_N_d_c[i] << endl;
@@ -459,8 +470,6 @@ int main() {
 				res << "scenario time: " << time_d1_c_N[i] << endl;
 				res << "game generation: " << game_generation_d1_c_N[i] << endl;
 				res << "solution concept: " << solution_concept_time_d1_c_N[i] << endl;
-				//res << "core distance_c: " << core_dis_N_c[i] << endl;
-				//res << "out_of_core_c: " << out_of_core_c[i] << endl;
 				res << "minimizing d_1_arbitrary: " << relative_arbitrary_N[i] << endl;
 				res << "minimizing max_d_1_arbitrary: " << max_arbitrary_N[i] << endl;
 				res << "average number of transplants_arbitrary: " << M_N_d_arbitrary[i] << endl;
@@ -468,8 +477,6 @@ int main() {
 				res << "scenario time: " << time_arbitrary_N[i] << endl;
 				res << "game generation: " << game_generation_arbitrary_N[i] << endl;
 				res << "solution concept: " << solution_concept_time_arbitrary_N[i] << endl;
-				//res << "core distance_arbitrary: " << core_dis_N_arbitrary[i] << endl;
-				//res << "out_of_core_arbitrary: " << out_of_core_arbitrary[i] << endl;
 				res << "lex min " << relative_lexmin[i] << endl;
 				res << "lex min max d " << max_lexmin[i] << endl;
 				res << "average number of transplants: " << M_N_lex_min[i] << endl;
@@ -489,158 +496,149 @@ int main() {
 
 			res.close();
 
-			ofstream res_dis;
-			res_dis.open("contribution/cycle_dis_d" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
-			for (const auto& elem : cycle_dis_d) {
-				res_dis << elem.first << ": " << elem.second << endl;
+			// cycle distributions
+			vector<long> value(5, 0);
+			if (d1) {
+				ofstream res_dis;
+				res_dis.open(solution_concept+"/"+version+"/cycle_dis_d" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
+				for (const auto& elem : cycle_dis_d) {
+					res_dis << elem.first << ": " << elem.second << endl;
+					value[0] += elem.first * elem.second;
+				}
+				res_dis << endl;
+				res_dis.close();
 			}
-			res_dis << endl;
-			res_dis.close();
+			
 
-
-			ofstream res_dis_c;
-			res_dis_c.open("contribution/cycle_dis_c" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
-			for (const auto& elem : cycle_dis_t_c) {
-				res_dis_c << elem.first << ": " << elem.second << endl;
+			if (d_c) {
+				ofstream res_dis_c;
+				res_dis_c.open(solution_concept + "/" + version + "/cycle_dis_c" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
+				for (const auto& elem : cycle_dis_t_c) {
+					res_dis_c << elem.first << ": " << elem.second << endl;
+					value[1] += elem.first * elem.second;
+				}
+				res_dis_c << endl;
+				res_dis_c.close();
 			}
-			res_dis_c << endl;
-			res_dis_c.close();
-
-			ofstream res_dis_arbitrary;
-			res_dis_arbitrary.open("contribution/cycle_dis_arbitrary" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
-			for (const auto& elem : cycle_dis_arbitrary) {
-				res_dis_arbitrary << elem.first << ": " << elem.second << endl;
+			
+			if (arbitrary) {
+				ofstream res_dis_arbitrary;
+				res_dis_arbitrary.open(solution_concept + "/" + version + "/cycle_dis_arbitrary" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
+				for (const auto& elem : cycle_dis_arbitrary) {
+					res_dis_arbitrary << elem.first << ": " << elem.second << endl;
+					value[2]= elem.first * elem.second;
+				}
+				res_dis_arbitrary << endl;
+				res_dis_arbitrary.close();
 			}
-			unsigned short int cot = 0;
-			for (const auto& elem : cycle_dis_arbitrary) {
-				cot += elem.first * elem.second;
+			
+			if (lexmin_call) {
+				ofstream res_dis_lexmin;
+				res_dis_lexmin.open(solution_concept + "/" + version + "/cycle_dis_lexmin" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
+				for (const auto& elem : cycle_dis_lexmin) {
+					res_dis_lexmin << elem.first << ": " << elem.second << endl;
+					value[3]+= elem.first * elem.second;
+				}
+				res_dis_lexmin << endl;
+				res_dis_lexmin.close();
 			}
-			std::cout << "size of M: " << cot;
-			res_dis_arbitrary << endl;
-			res_dis_arbitrary.close();
-
-			ofstream res_dis_lexmin;
-			res_dis_lexmin.open("contribution/cycle_dis_lexmin" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
-			for (const auto& elem : cycle_dis_lexmin) {
-				res_dis_lexmin << elem.first << ": " << elem.second << endl;
+			
+			if (lexmin_c_call) {
+				ofstream res_dis_lexmin_c;
+				long value_lexmin_c = 0;
+				res_dis_lexmin_c.open(solution_concept + "/" + version + "/cycle_dis_lexmin_c" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
+				for (const auto& elem : cycle_dis_lexmin_c) {
+					res_dis_lexmin_c << elem.first << ": " << elem.second << endl;
+					value[4]+= elem.first * elem.second;
+				}
+				res_dis_lexmin_c << endl;
+				res_dis_lexmin_c.close();
 			}
-			res_dis_lexmin << endl;
-			res_dis_lexmin.close();
-
-			ofstream res_dis_lexmin_c;
-			res_dis_lexmin_c.open("contribution/cycle_dis_lexmin_c" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
-			for (const auto& elem : cycle_dis_lexmin_c) {
-				res_dis_lexmin_c << elem.first << ": " << elem.second << endl;
-			}
-			res_dis_lexmin_c << endl;
-			res_dis_lexmin_c.close();
+			
 
 			// cycle distributions seperating by periods
-
-			ofstream res_cycle_dis_d_period;
-			unsigned short int check_value_d = 0;;
-			for (unsigned short int i = 0; i < 24; ++i) {
-				res_cycle_dis_d_period.open("contribution/cycle_dis_d_period" + to_string(N) + "_" + to_string(i) + ".txt", ofstream::out | ofstream::trunc);
-				for (const auto& elem : cycle_dis_d_period[(N) * (i + 1)]) {
-					check_value_d += elem.first * elem.second;
-					res_cycle_dis_d_period << elem.first << ": " << elem.second << endl;
+			vector<long> check(5, 0);
+			if (d1) {
+				ofstream res_cycle_dis_d_period;
+				for (unsigned short int i = 0; i < 24; ++i) {
+					res_cycle_dis_d_period.open(solution_concept + "/" + version + "/cycle_dis_d_period" + to_string(N) + "_" + to_string(i) + ".txt", ofstream::out | ofstream::trunc);
+					for (const auto& elem : cycle_dis_d_period[(N) * (i + 1)]) {
+						check[0] += elem.first * elem.second;
+						res_cycle_dis_d_period << elem.first << ": " << elem.second << endl;
+					}
+					res_cycle_dis_d_period << endl;
+					res_cycle_dis_d_period.close();
 				}
-				res_cycle_dis_d_period << endl;
 				res_cycle_dis_d_period.close();
 			}
-			cout << "check_value_d: " << check_value_d << endl;
-			res_cycle_dis_d_period.close();
+			
 
-			ofstream res_cycle_dis_c_period;
-			unsigned short int check_value_d_c = 0;
-			for (unsigned short int i = 0; i < 24; ++i) {
-				res_cycle_dis_c_period.open("contribution/cycle_dis_c_period" + to_string(N) + "_" + to_string(i) + ".txt", ofstream::out | ofstream::trunc);
-				for (const auto& elem : cycle_dis_t_c_period[(N) * (i + 1)]) {
-					check_value_d_c += elem.first * elem.second;
-					res_cycle_dis_c_period << elem.first << ": " << elem.second << endl;
+			if (d_c) {
+				ofstream res_cycle_dis_c_period;
+				for (unsigned short int i = 0; i < 24; ++i) {
+					res_cycle_dis_c_period.open(solution_concept + "/" + version + "/cycle_dis_c_period" + to_string(N) + "_" + to_string(i) + ".txt", ofstream::out | ofstream::trunc);
+					for (const auto& elem : cycle_dis_t_c_period[(N) * (i + 1)]) {
+						check[1] += elem.first * elem.second;
+						res_cycle_dis_c_period << elem.first << ": " << elem.second << endl;
+					}
+					res_cycle_dis_c_period << endl;
+					res_cycle_dis_c_period.close();
 				}
-				res_cycle_dis_c_period << endl;
 				res_cycle_dis_c_period.close();
 			}
-			cout << "check_value_d_c: " << check_value_d_c << endl;
-			res_cycle_dis_c_period.close();
-
-			ofstream res_cycle_dis_arbitrary_period;
-			unsigned short int check_value_arbitrary = 0;
-			for (unsigned short int i = 0; i < 24; ++i) {
-				res_cycle_dis_arbitrary_period.open("contribution/cycle_dis_arbitrary_period" + to_string(N) + "_" + to_string(i) + ".txt", ofstream::out | ofstream::trunc);
-				for (const auto& elem : cycle_dis_arbitrary_period[(N) * (i + 1)]) {
-					check_value_arbitrary += elem.first * elem.second;
-					res_cycle_dis_arbitrary_period << elem.first << ": " << elem.second << endl;
+			
+			if (arbitrary) {
+				ofstream res_cycle_dis_arbitrary_period;
+				for (unsigned short int i = 0; i < 24; ++i) {
+					res_cycle_dis_arbitrary_period.open(solution_concept + "/" + version + "/cycle_dis_arbitrary_period" + to_string(N) + "_" + to_string(i) + ".txt", ofstream::out | ofstream::trunc);
+					for (const auto& elem : cycle_dis_arbitrary_period[(N) * (i + 1)]) {
+						check[2] += elem.first * elem.second;
+						res_cycle_dis_arbitrary_period << elem.first << ": " << elem.second << endl;
+					}
+					res_cycle_dis_arbitrary_period << endl;
+					res_cycle_dis_arbitrary_period.close();
 				}
-				res_cycle_dis_arbitrary_period << endl;
 				res_cycle_dis_arbitrary_period.close();
 			}
-			cout << "check_value_arbitrary: " << check_value_arbitrary << endl;
-			res_cycle_dis_arbitrary_period.close();
+			
 
-			ofstream res_dis_lexmin_period;
-			unsigned short int check_value_lexmin = 0;
-			for (unsigned short int i = 0; i < 24; ++i) {
-				res_dis_lexmin_period.open("contribution/cycle_dis_lexmin_period" + to_string(N) + "_" + to_string(i) + ".txt", ofstream::out | ofstream::trunc);
-				for (const auto& elem : cycle_dis_lexmin_period[(N) * (i + 1)]) {
-					check_value_lexmin += elem.first * elem.second;
-					res_dis_lexmin_period << elem.first << ": " << elem.second << endl;
+			if (lexmin_call) {
+				ofstream res_dis_lexmin_period;
+				for (unsigned short int i = 0; i < 24; ++i) {
+					res_dis_lexmin_period.open(solution_concept + "/" + version + "/lexmin/cycle_dis_lexmin_period" + to_string(N) + "_" + to_string(i) + ".txt", ofstream::out | ofstream::trunc);
+					for (const auto& elem : cycle_dis_lexmin_period[(N) * (i + 1)]) {
+						check[3] += elem.first * elem.second;
+						res_dis_lexmin_period << elem.first << ": " << elem.second << endl;
+					}
+					res_dis_lexmin_period << endl;
+					res_dis_lexmin_period.close();
 				}
-				res_dis_lexmin_period << endl;
 				res_dis_lexmin_period.close();
 			}
-			cout << "check_value_lexmin: " << check_value_lexmin << endl;
-			res_dis_lexmin_period.close();
-
-			ofstream res_cycle_dis_lexmin_c_period;
-			unsigned short int check_value = 0;
-			for (unsigned short int i = 0; i < 24; ++i) {
-				res_cycle_dis_lexmin_c_period.open("contribution/cycle_dis_lexmin_c_period" + to_string(N) + "_" + to_string(i) + ".txt", ofstream::out | ofstream::trunc);
-				for (const auto& elem : cycle_dis_lexmin_c_period[(N) * (i + 1)]) {
-					check_value += elem.first * elem.second;
-					res_cycle_dis_lexmin_c_period << elem.first << ": " << elem.second << endl;
+			
+			if (lexmin_c_call) {
+				ofstream res_cycle_dis_lexmin_c_period;
+				for (unsigned short int i = 0; i < 24; ++i) {
+					res_cycle_dis_lexmin_c_period.open(solution_concept + "/" + version + "/cycle_dis_lexmin_c_period" + to_string(N) + "_" + to_string(i) + ".txt", ofstream::out | ofstream::trunc);
+					for (const auto& elem : cycle_dis_lexmin_c_period[(N) * (i + 1)]) {
+						check[4] += elem.first * elem.second;
+						res_cycle_dis_lexmin_c_period << elem.first << ": " << elem.second << endl;
+					}
+					res_cycle_dis_lexmin_c_period << endl;
+					res_cycle_dis_lexmin_c_period.close();
 				}
-				res_cycle_dis_lexmin_c_period << endl;
 				res_cycle_dis_lexmin_c_period.close();
 			}
-			cout << "check_value: " << check_value << endl;
-			res_cycle_dis_lexmin_c_period.close();
-
-
-		}
-		/*for (unsigned short int i = 0; i < 24; ++i) {
-			cout << "num of maximum solutions: " << numofMaxSolution[i] << endl;
-		}
-		cout << "cycle_dis.size(): " << cycle_dis.size() << endl;
-		unsigned short int count_0 = 0;
-		for (const auto& elem : cycle_dis)
-		{
-			count_0 += elem.first * elem.second;
-			std::cout << elem.first << " " << elem.second << "\n";
-		}
-		cout << "cycle_dis.total_size(): " << count_0 << endl;*/
-		/*std::string fileName = "results_contribution_c_2000.txt";
-		std::ofstream outputFile(fileName);
-
-		if (outputFile.is_open()) {
-			// Write data to the file
-			outputFile << "relative deviation" << endl;
-			for (unsigned short int i = 0; i < N - 4; ++i) {
-				outputFile << "minimizing d_1: " << relative_d1_N[i] << endl;
-				outputFile << "average number of transplants: " << M_N[i] << endl;
-				outputFile << "core distance: " << core_dis_N[i] << endl;
-				outputFile << "out_of_core: " << out_of_core[i] << endl;
+			
+			for (unsigned short int i = 0; i < 5; ++i) {
+				if (value[i] != check[i]) {
+					cout << "Error in the number of transplants" << endl;
+				}
 			}
+			
 
-			// Close the file
-			outputFile.close();
 
-			std::cout << "Data has been written to the file." << std::endl;
 		}
-		else {
-			std::cout << "Unable to open the file." << std::endl;
-		}*/
 
 	}
 	catch (GRBException e) {
@@ -651,47 +649,6 @@ int main() {
 		std::cout << "Exception during optimization" << endl;
 	}
 	return 0;
-}
-
-
-double core_dist(vector<double>& x, vector<double>& v_impu, vector<double>& v_S, unsigned short int& N, unsigned int& S) {
-	double eps = x[0] - v_impu[0];
-	if (x[1] - v_impu[1] < eps)
-		eps = x[1] - v_impu[1];
-	vector<bool> a(N, false);
-	double xS = 0;
-	for (unsigned int i = 2; i < S; i++) {
-		de2bi(i, a, N);
-		for (unsigned short int j = 0; j < N; j++) {
-			if (a[j]) {
-				xS += x[j];
-			}
-
-		}
-		if (xS - v_S[i] < eps)
-			eps = xS - v_S[i];
-		xS = 0;
-	}
-	return eps;
-}
-
-void de2bi(unsigned int& k, vector<bool>& a, unsigned short int& N) {
-	vector<bool> zero(N, false);
-	a = zero;
-	unsigned int i = 2;
-	for (unsigned short int c = 0; c < N - 2; c++)
-		i += i;
-	unsigned int j = k + 1;
-	unsigned short int l = N - 1;
-	while (j > 0) {
-		if (j >= i) {
-			a[l] = true;
-			j -= i;
-		}
-		i /= 2;
-		l--;
-	}
-	return;
 }
 
 
@@ -707,13 +664,9 @@ void coop_game(ListGraph& g, vector<double>& v, vector<double>& v_impu, vector<d
 			if (active_nodes[c[k]]) {
 				coal1[c[k]] = true;
 				coal1[c_b[k]] = true;
-				//coal1_original[c_original[k]] = true;
 			}
 		}
 
-		//MaxMatching<FilterNodes<ListGraph>> coal_m1(FilterNodes<ListGraph>(g, coal1));
-		//FilterNodes<ListGraph> coal_m1(g, coal1);
-		//std::cout<<"my type is..."<<typeid(coal_m1).name() << endl;
 		MaxWeightedPerfectMatching<FilterNodes<ListGraph>, ListGraph::EdgeMap<double>> coal_m1(FilterNodes<ListGraph>(g, coal1), edge_card_weight);
 		coal_m1.run();
 		v_impu[i] = coal_m1.matchingWeight();
@@ -729,32 +682,15 @@ void coop_game(ListGraph& g, vector<double>& v, vector<double>& v_impu, vector<d
 				}
 			}
 		}
+
+
 		//MaxWeightedPerfectMatching<FilterNodes<ListGraph>> coal_m2(g, coal2);
 		MaxWeightedPerfectMatching<FilterNodes<ListGraph>, ListGraph::EdgeMap<double>> coal_m2(FilterNodes<ListGraph>(g, coal2), edge_card_weight);
 		coal_m2.run();
 		v[i] = coal_m2.matchingWeight();
 		std::cout << "finish generating v_i" << endl;
+
 	}
-
-
-	/*for (unsigned int i = 2; i < S; i++) {
-		de2bi(i, a, N);
-		ListGraph::NodeMap<bool> coal3(g, false);
-		for (unsigned short int j = 0; j < N; j++) {
-			if (a[j]) {
-				for (unsigned short int k = j * Vp; k < (j + 1) * Vp; ++k) {
-					if (active_nodes[c[k]]) {
-						coal3[c[k]] = true;
-						coal3[c_b[k]] = true;
-					}
-				}
-			}
-
-		}
-		MaxWeightedPerfectMatching<FilterNodes<ListGraph>, ListGraph::EdgeMap<double>> coal_m1(FilterNodes<ListGraph>(g, coal3), edge_card_weight);
-		coal_m1.run();
-		v_S[i] = coal_m1.matchingWeight();
-	}*/
 
 
 	std::cout << "finish generating the copy" << endl;
@@ -763,6 +699,7 @@ void coop_game(ListGraph& g, vector<double>& v, vector<double>& v_impu, vector<d
 	grand_coal.run();
 	v[N] = grand_coal.matchingWeight();
 	double t1 = cpuTime();
+	std::cout << "Time in game generation " << t1 - t0 << endl;
 	game_generation += t1 - t0;
 	grand_coal.matchingMap();
 	std::cout << "finish generating v[N]" << endl;
@@ -792,123 +729,11 @@ void coop_game(ListGraph& g, vector<double>& v, vector<double>& v_impu, vector<d
 		cycle_distribution(cycle_dis_arbitrary_period, cycle_dis, cycle_distri, N, Q);
 	}
 
-	std::cout << "start generating the copy" << endl;
-	unsigned short int numofNodes = countNodes(sg) / 2;
-	std::cout << "numofNodes: " << numofNodes << endl;;
-	double epsilon = 1.0 / (1 + numofNodes);
-	//double maxValue;
-	// to see whether it has the unique max solution
-	/*double baseline = v[N] - (numofNodes * epsilon);
-	cout << "v[N] - (numofNodes  * epsilon): " << v[N] - (numofNodes * epsilon) << " " << "numofNodes * epsilon: " << numofNodes * epsilon << endl;
-	cout << "baseline: " << baseline << endl;
-	unsigned short int numMax = 1;
-	double sumWeight = 0;
-	for (ListGraph::EdgeIt e(g); e != INVALID; ++e) {
-		if (grand_coal.matching(e)) {
-			edge_card_weight[e] -= epsilon;
-		}
-	}
-	MaxWeightedPerfectMatching<FilterNodes<ListGraph>, ListGraph::EdgeMap<double>> grand_coal_copy(FilterNodes<ListGraph>(g, active_nodes), edge_card_weight);
-	grand_coal_copy.run();
-	sumWeight = grand_coal_copy.matchingWeight();*/
-	/*for (ListGraph::EdgeIt e(g); e != INVALID; ++e) {
-		if (grand_coal_copy.matching(e)) {
-			sumWeight += edge_card_weight[e];
-		}
-	}*/
-	//double maxValue = grand_coal_copy.matchingWeight();
-	//cout << "maxValue: " << maxValue << " " <<"epsilon: "<<epsilon<<" " << "original max value: " << v[N] << endl;
-	/*while (sumWeight > baseline + pow(10, -4)) {
-		++numMax;
-		cout << "numMax: " << numMax << "sumWeight: " << sumWeight << endl;
-		for (ListGraph::EdgeIt e(g); e != INVALID; ++e) {
-			if (grand_coal_copy.matching(e)) {
-				//sumWeight += edge_card_weight[e];
-				if (edge_card_weight[e] == 1 or edge_card_weight[e] == 0) {
-					//cout << "edge_card_weight[e]: " << edge_card_weight[e] << endl;
-					edge_card_weight[e] -= epsilon;
-				}
-			}
-		}
-		sumWeight = grand_coal_copy.matchingWeight();
-		MaxWeightedPerfectMatching<FilterNodes<ListGraph>, ListGraph::EdgeMap<double>> grand_coal_copy(FilterNodes<ListGraph>(g, active_nodes), edge_card_weight);
-		grand_coal_copy.run();
-		cout << "sumWeight: " << sumWeight << "baseline: " << baseline << endl;
-		//cout << "maxValue: " << maxValue << " " << "numMax: " << numMax << endl;
-	}
-	++numMax;
-	numofMaxSolution[Q] = numMax;
-	//make the graph back to the original bipirate graph
-	unsigned short int ori = 0;
-	for (ListGraph::EdgeIt e(g); e != INVALID; ++e) {
-		++ori;
-		if (edge_card_weight[e] < 0) {
-			edge_card_weight[e] = 0;
-		}
-		if (edge_card_weight[e] > 0 && edge_card_weight[e] < 1) {
-			edge_card_weight[e] = 1;
-		}
 
-	}*/
-	/*ListGraph g_copy;
-	vector<ListGraph::Node> c_copy(countNodes(sg));
-	ListGraph::EdgeMap<double> edge_card_weight_copy(g_copy, 0);
-	cout << "start adding nodes to the copy" << endl;
-	for (FilterNodes<ListGraph>::NodeIt n(sg); n != INVALID; ++n) {
-		g_copy.addNode();
-	}
-	cout << "start adding edges to the copy" << endl;
-	for (FilterNodes<ListGraph>::EdgeIt e(sg); e != INVALID; ++e) {
-		cout << "source id: " << sg.id(sg.u(e)) << '/n' << "target id: " << sg.id(sg.v(e));
 
-	}
-	cout << "start adding edges to the copy" << endl;
-	double baseline = v[N] - (numofNodes - 1) * epsilon;
-	MaxWeightedPerfectMatching<ListGraph, ListGraph::EdgeMap<double>> grand_coal_copy(g_copy, edge_card_weight_copy);
-	grand_coal_copy.run();
-	maxValue = grand_coal_copy.matchingWeight();
-	cout << "start the loop" << endl;
-	if (maxValue > baseline) {
-		numMax += 1;
-	}
-	while (maxValue > baseline) {
-		for (ListGraph::EdgeIt e(g_copy); e != INVALID; ++e) {
-			if (grand_coal_copy.matching(e)) {
-				edge_card_weight_copy[e] = edge_card_weight[e] - epsilon;
-			}
-		}
-		MaxWeightedPerfectMatching<ListGraph, ListGraph::EdgeMap<double>> grand_coal_copy(g_copy, edge_card_weight_copy);
-		grand_coal_copy.run();
-		maxValue = grand_coal_copy.matchingWeight();
-		if (maxValue > baseline) {
-			numMax += 1;
-		}
-	}
-	numofMaxSolution[Q] = numMax;*/
-
-	/*FilterNodes<ListDigraph> sg_original(g_original, active_nodes_original);
-	MaxWeightedPerfectMatching<FilterNodes<ListDigraph>, ListDigraph::ArcMap<unsigned short int>> grand_coal_original(FilterNodes<ListDigraph>(g_original, active_nodes_original), arc_card_weight);
-	grand_coal_original.run();
-	v[N]_original = grand_coal_original.matchingWeight();
-	grand_coal_original.matchingMap();*/
 	if (dispy)
 		std::cout << "grand coal: " << v[N] << endl;
-	/*for (unsigned short int i = 0; i < N; i++) {
-		for (unsigned short int j = i * Vp; j < (i + 1) * Vp; j++) {
-			if (active_nodes[c[j]]) {
-				if (!(grand_coal.mate(c[j]) == INVALID)) {
-					s[i]++;
-					leaving[j] = true;
-				}
-				else {
-					leaving[j] = false;
-				}
-			}
-			else {
-				leaving[j] = false;
-			}
-		}
-	}*/
+
 	if (dispy) {
 		std::cout << "s: ";
 		for (unsigned short int i = 0; i < N; i++) {
@@ -981,30 +806,14 @@ void min_d_1(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph
 		double t1 = cpuTime();
 		solution_concept_time += t1 - t0;
 
-		/*if (core_dist(target, v_impu, v_S, N, S) >= 0) {
-			cout << "core_dist: " << core_dist(target, v_impu, v_S, N, S) << endl;
-			core_100 += core_dist(target, v_impu, v_S, N, S);
+		if (suma>0) {
+			cout << "denominator>0"<<endl;
 		}
-		else {
-			if (abs(core_dist(target, v_impu, v_S, N, S)) > pow(10,-7)) {
-				cout << "error_core_dist: " << core_dist(target, v_impu, v_S, N, S) << endl;
-				negative_core += 1;
-				cout << "error_core_dist_arbitrary: " << core_dist(target, v_impu, v_S, N, S) << endl;
-				std::string fileName = "Error_not_in_the_core.txt";
-				std::ofstream outputFile(fileName);
-
-				if (outputFile.is_open()) {
-					// Write data to the file
-					outputFile << N << "countries" << "," << "instance: " << inst << "Period: " << Q << "error_core_dist: " << core_dist(target, v_impu, v_S, N, S) << endl;
-
-					// Close the file
-					outputFile.close();
-				}
-			}
-
-		}*/
-
-
+		else{
+			ofstream res_denominator;
+			res_denominator << N << " countries" << " " << "instance_" << inst << " round_" << Q << endl;
+			res_denominator.close();
+		}
 		//init_alloc[Q] = target;
 		if (dispy) {
 			if (target_omega) {
@@ -1160,39 +969,8 @@ void undi_lemon(unsigned int& m, vector<unsigned int>& arc_in, vector<unsigned i
 			edge_card_weight[e] = 1;
 			ListDigraph::Arc a_original = g_original.addArc(c_original[label_positions[arc_out[i]]], c_original[label_positions[arc_in[i]]]);
 			arc_card_weight[a_original] = 1;
-			/*if (arc_out[i] < arc_in[i]) {
-				for (unsigned int j = i + 1; arc_out[j] < arc_in[i] + 1; j++) {
-					if (arc_out[j] == arc_in[i]) {
-						for (unsigned int k = j; arc_out[k] == arc_out[j]; k++) {
-							if (arc_out[i] == arc_in[k]) {
-								ListGraph::Edge e = g.addEdge(c[label_positions[arc_out[i]]], c[label_positions[arc_in[i]]]);
-								edge_card_weight[e] = 1;
-								if (!(abs(node_arrives[label_positions[arc_out[i]]] - node_arrives[label_positions[arc_in[i]]]) > 3)) { //XY: valid patient-donor pairs in 1 year
-									g_ideal.addEdge(c[label_positions[arc_out[i]]], c[label_positions[arc_in[i]]]);
-								}
-								halt = true;
-							}
-							if ((halt) || (k == m - 1))
-								break;
-						}
-					}
-					if ((halt) || (j == m - 1)) {
-						halt = false;
-						break;
-					}
-				}
-			}*/
 		}
 	}
-	/*cout << "start id" << endl;
-	for (ListDigraph::NodeIt n(g_original); n != INVALID; ++n) {
-		std::cout << g_original.id(n) << std::endl;
-	}
-
-	cout << "g-c && g--c_b" << endl;
-	for (unsigned short int i = 0; i < c.size(); ++i) {
-		cout << g.id(c[i]) << " " << g.id(c_b[i]) << endl;
-	}*/
 	return;
 }
 
@@ -1351,20 +1129,6 @@ void xml_parser(string& line, vector<unsigned short int>& node_labels, vector<un
 			break;
 	}
 	std::cout << "the number of nodes" << n;
-	//cout << "node_labels[n - 1] " << node_labels[n - 1] <<"\n";
-	/*cout << "size of label postions" << label_positions.size();
-	for (int i = 0; i < label_positions.size(); i++) {
-		cout << label_positions[i] << endl;
-	}
-	cout << "size of node labels" << node_labels.size();
-	for (int i = 0; i < node_labels.size(); i++) {
-		cout << node_labels[i] << endl;
-	}*/
-	//int max_arc_in = *max_element(arc_in.begin(), arc_in.end());
-	//int max_arc_out= *max_element(arc_out.begin(), arc_out.end());
-	//cout << "max value of arc_in: " <<max_arc_in<< "\n"<<"max value of arc_out : "<<max_arc_out<<endl;
-
-	//cout << "k: " << k << "\n";
 	std::cout << "m: " << m << "\n";
 	std::cout << "arc_in.size(): " << arc_in.size() << "\n" << " arc_out.size(): " << arc_out.size() << endl;
 	return;
@@ -1425,23 +1189,14 @@ void ILP_d1_gurobi(unsigned short int& Q, unsigned short int& N, ListDigraph& g_
 	// Create an environment
 	GRBEnv env = GRBEnv(true);
 	env.set("LogFile", "mip_lexmin.log");
-	
+
 	env.start();
 
 	// Create an empty model
 	GRBModel model = GRBModel(env);
-	//contribution
-	if (N == 4 && inst == 52) {
-		model.set("TimeLimit", "600");
-	}
-	//model.set("Threads", "24");
+	//model.set("Threads", "16");
 	vector<GRBModel> vector_model(2 * N - 1, GRBEnv(env));
-	//try to look for a set of optimized parameters
-	/*model.tune();
-	for (unsigned short int i = 0; i < model.get(GRB_IntAttr_TuneResultCount); ++i) {
-		model.getTuneResult(i);
-		model.write("tune" + to_string(i) + ".prm");
-	}*/
+
 	// Create variables
 	vector<GRBVar> var_bi(col_num + 2 * N);
 	for (unsigned short int i = 0; i < col_num - 1; ++i) {
@@ -1461,9 +1216,7 @@ void ILP_d1_gurobi(unsigned short int& Q, unsigned short int& N, ListDigraph& g_
 	for (unsigned short int i = 1; i < N + 1; ++i) {
 		bound[i - 1] = target[i - 1] + credit[i - 1];
 	}
-	/*for (unsigned short int i = 1 + N; i < 2 * N + 1; ++i) {
-		bound[i - 1] = target[i - 1];
-	}*/
+	
 	for (unsigned short int i = N + 1; i < N + 1 + nodeset.size(); ++i) {
 		bound[i - 1] = 0;
 	}
@@ -1656,7 +1409,7 @@ void ILP_d1_gurobi(unsigned short int& Q, unsigned short int& N, ListDigraph& g_
 		else {
 			credit[i] = 0;
 		}
-		std::cout << "country" << to_string(i) << "target[i]: " << target[i] << '/n' << "s[i]: " << s[i] << "d[i]: " << d[i] << "credit[i]: " << credit[i] << endl;
+		std::cout << "country " << to_string(i)<<" " << "initial allocation " <<i<<": " << target[i] << '/n' << "s[i] : " << s[i] << "d[i] : " << d[i] << "credit[i] : " << credit[i] << endl;
 		//actual_alloc[Q].push_back(s[i]);
 	}
 	return;
@@ -1739,28 +1492,6 @@ void arbitraryMaximum(vector<unsigned short int>& node_arrives, ListGraph& g, Li
 			std::cout << endl;
 		}
 
-		/*if (core_dist(target, v_impu, v_S, N, S) >= 0) {
-			cout << "core_dist: " << core_dist(target, v_impu, v_S, N, S) << endl;
-			core_100 += core_dist(target, v_impu, v_S, N, S);
-		}
-		else {
-			if (abs(core_dist(target, v_impu, v_S, N, S)) > pow(10,-7)) {
-				cout << "error_core_dist: " << core_dist(target, v_impu, v_S, N, S) << endl;
-				negative_core += 1;
-				cout << "error_core_dist_arbitrary: " << core_dist(target, v_impu, v_S, N, S) << endl;
-				std::string fileName = "Error_not_in_the_core.txt";
-				std::ofstream outputFile(fileName);
-
-				if (outputFile.is_open()) {
-					// Write data to the file
-					outputFile << N << "countries" << "," << "instance: " << inst << "Period: " << Q << "error_core_dist: " << core_dist(target, v_impu, v_S, N, S) << endl;
-
-					// Close the file
-					outputFile.close();
-				}
-			}
-
-		}*/
 
 		for (unsigned short int i = 0; i < N; ++i) {
 			d[i] += target[i] - s[i];
@@ -1830,11 +1561,12 @@ void sort_d_t(vector<double>& d_t, vector<GRBVar>& var_bi, long& col_num, unsign
 	}
 	//sort
 	std::sort(d_copy.begin(), d_copy.end());
-	for (unsigned short int i = 0; i < N; ++i) {
+	/*for (unsigned short int i = 0; i < N; ++i) {
 		std::cout << "d_copy[i]" << d_copy[i] << endl;
 		std::cout << "s_copy" << s_copy[i] << endl;
-	}
+	}*/
 	d_t[t] = d_copy[N - 1 - t];
+
 	if (t < N - 1) {
 		d_t[t + 1] = d_copy[N - 2 - t];
 	}
@@ -1901,25 +1633,25 @@ void lex_min_n_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_st
 			vector_model[track].addQConstr(var_bi[col_num + N + i - 1] <= (1 - sum_zp_0[i - 1]) * (d_t[t_star] - epsilon * (1 - var_bi[col_num + 2 * N + t_star * N + i - 1])) + sum_zp_dp[i - 1]);
 		}
 	}
-	std::cout << "finish loading constraint 1" << endl;
+	//std::cout << "finish loading constraint 1" << endl;
 	for (unsigned short int i = N + 1; i < N + 1 + nodeset.size(); ++i) {
 		vector_model[track].addConstr(sum_row[i - 1] == bound[i - 1]);
 	}
-	std::cout << "finish loading constraint 2" << endl;
+	//std::cout << "finish loading constraint 2" << endl;
 	for (unsigned short int i = N + nodeset.size() + 1; i < N + 2 * (nodeset.size()) + 1; ++i) {
 		vector_model[track].addConstr(sum_row[i - 1] <= bound[i - 1]);
 	}
-	std::cout << "finish loading constraint 3" << endl;
+	//std::cout << "finish loading constraint 3" << endl;
 	vector_model[track].addConstr(sum_row[row_num - 1] == bound[row_num - 1]);
-	std::cout << "finish loading constraint 4" << endl;
+	//std::cout << "finish loading constraint 4" << endl;
 	for (unsigned short int i = 0; i < N; ++i) {
 		vector_model[track].addConstr(sum_p[i] <= 1);
 	}
-	std::cout << "finish loading constraint 5" << endl;
+	//std::cout << "finish loading constraint 5" << endl;
 	for (unsigned short int i = 0; i < t_star; ++i) {
 		vector_model[track].addConstr(sum_t_star[i] == N_star[i]);
 	}
-	std::cout << "finish loading constraint 6" << endl;
+	//std::cout << "finish loading constraint 6" << endl;
 	std::cout << "finish loading constraints" << endl;
 	vector_model[track].optimize();
 	for (unsigned short int i = 0; i < t_star + 1; ++i) {
@@ -1931,7 +1663,7 @@ void lex_min_n_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_st
 		if (var_bi[col_num + N * (2 + t_star) + i].get(GRB_DoubleAttr_X) > pow(10, -4)) {
 			N_star[t_star] += 1;
 		}
-		std::cout << "var_bi[col_num + N * (2 + t_star) + i].get(GRB_DoubleAttr_X): " << var_bi[col_num + N * (2 + t_star) + i].get(GRB_DoubleAttr_X) << endl;
+		//std::cout << "var_bi[col_num + N * (2 + t_star) + i].get(GRB_DoubleAttr_X): " << var_bi[col_num + N * (2 + t_star) + i].get(GRB_DoubleAttr_X) << endl;
 
 	}
 	std::cout << "epsilon: " << epsilon << "d_t[t_star: " << d_t[t_star] << endl;
@@ -2085,7 +1817,7 @@ void cycle_distribution(std::map<int, std::map<int, int>>& cycle_dis_period, map
 				if (first == cycle_distri[j].second) {
 					//cout << "period " << j << " " << cycle_length << endl;
 					++cycle_dis_period[N * (Q + 1)][cycle_length];
-					cout << "cycle_dis_period[N*(Q+1)][cycle_length]: " << cycle_dis_period[N * (Q + 1)][cycle_length] << endl;
+					//cout << "cycle_dis_period[N*(Q+1)][cycle_length]: " << cycle_dis_period[N * (Q + 1)][cycle_length] << endl;
 					++cycle_dis[cycle_length];
 					cycle_length = 1;
 					cycle_distri.erase(cycle_distri.begin() + j);
@@ -2118,7 +1850,7 @@ void epsilon_func(vector<double> target, vector<double> credit, double& epsilon,
 			++t;
 			//cout << "target_credit[i]: " << target_credit[i] << "target_credit[j]: " << target_credit[j] << endl;
 			epsilon_sort[t] = abs(frac(target_credit[i]) - frac(target_credit[j]));
-			cout << "a-b: " << epsilon_sort[t] << endl;
+			//cout << "a-b: " << epsilon_sort[t] << endl;
 			++t;
 			epsilon_sort[t] = abs(frac(target_credit[i]) - (1 - frac(target_credit[j])));
 			//cout << "a-(1-b): " << epsilon_sort[t] << endl;
@@ -2126,12 +1858,9 @@ void epsilon_func(vector<double> target, vector<double> credit, double& epsilon,
 	}
 	cout << "t" << t << endl;
 
-	for (unsigned short int i = 0; i < epsilon_sort.size(); ++i) {
-		cout << "epsilon_sort: " << epsilon_sort[i] << endl;
-	}
 
 	auto newEnd = std::remove_if(epsilon_sort.begin(), epsilon_sort.end(), [](double num) {
-		return num < 2*pow(10, -4);
+		return num < 2 * pow(10, -4);
 		});
 	epsilon_sort.erase(newEnd, epsilon_sort.end());
 
@@ -2145,4 +1874,3 @@ double frac(double ori) {
 	abs_frac = abs(ori) - abs(int(ori));
 	return abs_frac;
 }
-
