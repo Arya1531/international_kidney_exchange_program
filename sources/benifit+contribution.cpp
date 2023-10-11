@@ -526,7 +526,7 @@ int main() {
 				res_dis_arbitrary.open(solution_concept + "/" + version + "/cycle_dis_arbitrary" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
 				for (const auto& elem : cycle_dis_arbitrary) {
 					res_dis_arbitrary << elem.first << ": " << elem.second << endl;
-					value[2]= elem.first * elem.second;
+					value[2]+= elem.first * elem.second;
 				}
 				res_dis_arbitrary << endl;
 				res_dis_arbitrary.close();
@@ -631,7 +631,9 @@ int main() {
 			}
 			
 			for (unsigned short int i = 0; i < 5; ++i) {
+				cout << "scenario: " << i << " " << value[i] << " " << check[i] << endl;
 				if (value[i] != check[i]) {
+					cout << "scenario: " << i << " " << value[i] <<" " << check[i] << endl;
 					cout << "Error in the number of transplants" << endl;
 				}
 			}
@@ -831,24 +833,6 @@ void min_d_1(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph
 		ILP_d1_gurobi(Q, N, g_original, Vp, node_arrives, active_nodes, active_nodes_original, arc_pair, nodeset, actual_alloc, v[N], M_total, s, cycle_distri, target, leaving, d, d_total, c_involved, credit, cycle_dis, lex_min, inst, cycle_dis_period);
 		t1 = cpuTime();
 		scenario_time += t1 - t0;
-		std::string fileName = "output_credits_benefit_no_c.txt";
-		std::ofstream outputFile(fileName);
-
-		if (outputFile.is_open()) {
-			// Write data to the file
-			outputFile << "credits--Period: " << Q << endl;
-			for (unsigned short int i = 0; i < N - 4; ++i) {
-				outputFile << "credits" << credit[i] << endl;
-			}
-
-			// Close the file
-			outputFile.close();
-
-			std::cout << "Data has been written to the file." << std::endl;
-		}
-		else {
-			std::cout << "Unable to open the file." << std::endl;
-		}
 		Q++;
 		changing_nodes(active_nodes, active_nodes_original, leaving, no_of_active_nodes, N, Vp, node_arrives, Q, c, c_b, c_original, s, d, target);
 		if (dispy)
