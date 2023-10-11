@@ -1,6 +1,5 @@
 *
 *    int_kidney_exchange
-*    contribution+benefit.cpp
 *    Purpose: computational study for Computing Balanced Solutions for Large International Kidney Exchange Schemes When Cycle Length Is Unbounded
 *
 *    @author Xin Ye
