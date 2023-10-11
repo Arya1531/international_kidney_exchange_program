@@ -1485,7 +1485,7 @@ void arbitraryMaximum(vector<unsigned short int>& node_arrives, ListGraph& g, Li
 			else {
 				credit[i] = 0;
 			}
-			std::cout << "country" << to_string(i) << "target[i]: " << target[i] << '/n' << "s[i]: " << s[i] << "d[i]: " << d[i] << "credit[i]: " << credit[i] << endl;
+			std::cout << "country" << to_string(i) << "initial allocation[i]: " << target[i] << '/n' << "s[i]: " << s[i] << "d[i]: " << d[i] << "credit[i]: " << credit[i] << endl;
 			//actual_alloc[Q].push_back(s[i]);
 		}
 
@@ -1549,7 +1549,12 @@ void sort_d_t(vector<double>& d_t, vector<GRBVar>& var_bi, long& col_num, unsign
 		std::cout << "d_copy[i]" << d_copy[i] << endl;
 		std::cout << "s_copy" << s_copy[i] << endl;
 	}*/
-	d_t[t] = d_copy[N - 1 - t];
+	if (epsilon > 3 * pow(10, -4)) {
+		d_t[t] = d_copy[N - 1 - t] + pow(10, -4);
+	}
+	else {
+		d_t[t] = d_copy[N - 1 - t];
+	}
 
 	if (t < N - 1) {
 		d_t[t + 1] = d_copy[N - 2 - t];
