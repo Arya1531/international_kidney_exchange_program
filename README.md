@@ -12,5 +12,3 @@ We run our simulations both without and with (“+𝑐”) using the credit syst
 solution concepts, the Shapley value, nucleolus, Banzhaf value, tau value, benefit value and contribution value.
 
 Please find the data, seeds and sources in the diretory of "international_kideney_exchange_program/data", "international_kideney_exchange_program/seeds"  *    and "international_kideney_exchange_program/sources" specifically.
-
-If any questions, please feel free to contact by xin.ye@durham.ac.uk.
