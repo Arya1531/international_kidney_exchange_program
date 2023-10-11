@@ -454,43 +454,54 @@ int main() {
 			res.open(solution_concept+"/"+version+"/results.txt", ofstream::out | ofstream::trunc);
 			for (unsigned short int i = 0; i < N - 3; i++) {
 				res << i + 4 << "countries" << endl;
-				res << "data preparation: " << data_preparation_N[i] << endl;
-				res << "build graph: " << graph_building_N[i] << endl;
-				res << "minimizing d_1: " << relative_d1_N[i] << endl;
-				res << "minimizing max_d_1: " << max_d1_N[i] << endl;
-				res << "average number of transplants: " << M_N[i] << endl;
-				res << "total time: " << total_time_d1_N[i] << endl;
-				res << "scenario time: " << time_d1_N[i] << endl;
-				res << "game generation: " << game_generation_d1_N[i] << endl;
-				res << "solution concept: " << solution_concept_time_d1_N[i] << endl;
-				res << "minimizing d_1_c: " << relative_d1_N_c[i] << endl;
-				res << "minimizing max_d_1_c: " << max_d1_N_c[i] << endl;
-				res << "average number of transplants_c: " << M_N_d_c[i] << endl;
-				res << "total time: " << total_time_d1_c_N[i] << endl;
-				res << "scenario time: " << time_d1_c_N[i] << endl;
-				res << "game generation: " << game_generation_d1_c_N[i] << endl;
-				res << "solution concept: " << solution_concept_time_d1_c_N[i] << endl;
-				res << "minimizing d_1_arbitrary: " << relative_arbitrary_N[i] << endl;
-				res << "minimizing max_d_1_arbitrary: " << max_arbitrary_N[i] << endl;
-				res << "average number of transplants_arbitrary: " << M_N_d_arbitrary[i] << endl;
-				res << "total time: " << total_time_arbitrary_N[i] << endl;
-				res << "scenario time: " << time_arbitrary_N[i] << endl;
-				res << "game generation: " << game_generation_arbitrary_N[i] << endl;
-				res << "solution concept: " << solution_concept_time_arbitrary_N[i] << endl;
-				res << "lex min " << relative_lexmin[i] << endl;
-				res << "lex min max d " << max_lexmin[i] << endl;
-				res << "average number of transplants: " << M_N_lex_min[i] << endl;
-				res << "total time: " << total_time_lex_min_N[i] << endl;
-				res << "scenario time: " << time_lex_min_N[i] << endl;
-				res << "game generation: " << game_generation_lexmin_N[i] << endl;
-				res << "solution concept: " << solution_concept_time_lexmin_N[i] << endl;
-				res << "lex min+c " << relative_lexmin_c[i] << endl;
-				res << "lex min+c max " << max_lexmin_c[i] << endl;
-				res << "average number of transplants: " << M_N_lex_min_c[i] << endl;
-				res << "total time: " << total_time_lex_min_c_N[i] << endl;
-				res << "scenario time: " << time_lex_min_c_N[i] << endl;
-				res << "game generation: " << game_generation_lexmin_c_N[i] << endl;
-				res << "solution concept: " << solution_concept_time_lexmin_c_N[i] << endl;
+				if (d1) {
+					res << "data preparation: " << data_preparation_N[i] << endl;
+					res << "build graph: " << graph_building_N[i] << endl;
+					res << "minimizing d_1: " << relative_d1_N[i] << endl;
+					res << "minimizing max_d_1: " << max_d1_N[i] << endl;
+					res << "average number of transplants: " << M_N[i] << endl;
+					res << "total time: " << total_time_d1_N[i] << endl;
+					res << "scenario time: " << time_d1_N[i] << endl;
+					res << "game generation: " << game_generation_d1_N[i] << endl;
+					res << "solution concept: " << solution_concept_time_d1_N[i] << endl;
+				}
+				if (d_c) {
+					res << "minimizing d_1_c: " << relative_d1_N_c[i] << endl;
+					res << "minimizing max_d_1_c: " << max_d1_N_c[i] << endl;
+					res << "average number of transplants_c: " << M_N_d_c[i] << endl;
+					res << "total time: " << total_time_d1_c_N[i] << endl;
+					res << "scenario time: " << time_d1_c_N[i] << endl;
+					res << "game generation: " << game_generation_d1_c_N[i] << endl;
+					res << "solution concept: " << solution_concept_time_d1_c_N[i] << endl;
+				}
+				if (arbitrary) {
+					res << "minimizing d_1_arbitrary: " << relative_arbitrary_N[i] << endl;
+					res << "minimizing max_d_1_arbitrary: " << max_arbitrary_N[i] << endl;
+					res << "average number of transplants_arbitrary: " << M_N_d_arbitrary[i] << endl;
+					res << "total time: " << total_time_arbitrary_N[i] << endl;
+					res << "scenario time: " << time_arbitrary_N[i] << endl;
+					res << "game generation: " << game_generation_arbitrary_N[i] << endl;
+					res << "solution concept: " << solution_concept_time_arbitrary_N[i] << endl;
+				}
+				if (lexmin_call) {
+					res << "lex min " << relative_lexmin[i] << endl;
+					res << "lex min max d " << max_lexmin[i] << endl;
+					res << "average number of transplants: " << M_N_lex_min[i] << endl;
+					res << "total time: " << total_time_lex_min_N[i] << endl;
+					res << "scenario time: " << time_lex_min_N[i] << endl;
+					res << "game generation: " << game_generation_lexmin_N[i] << endl;
+					res << "solution concept: " << solution_concept_time_lexmin_N[i] << endl;
+				}
+				if (lexmin_c_call) {
+					res << "lex min+c " << relative_lexmin_c[i] << endl;
+					res << "lex min+c max " << max_lexmin_c[i] << endl;
+					res << "average number of transplants: " << M_N_lex_min_c[i] << endl;
+					res << "total time: " << total_time_lex_min_c_N[i] << endl;
+					res << "scenario time: " << time_lex_min_c_N[i] << endl;
+					res << "game generation: " << game_generation_lexmin_c_N[i] << endl;
+					res << "solution concept: " << solution_concept_time_lexmin_c_N[i] << endl;
+				}
+				
 				res << endl;
 			}
 
