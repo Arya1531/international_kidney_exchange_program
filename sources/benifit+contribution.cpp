@@ -5,7 +5,7 @@
 *			  Exchange Schemes When Cycle Length Is Unbounded
 *             using the benefit and contribution value as initial allocations with equal country sizes
 *
-*    @author Xin Ye
+*   
 *    @version 1.0 09/10/2023
 *
 *    This program is free software: you can redistribute it and/or modify
