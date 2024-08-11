@@ -174,7 +174,7 @@ int main() {
 	double M = 0;
 	vector<double> temp_relative(7, 0);
 	vector<vector<double>> relative_optimal(4, temp_relative);
-	for (N = 4; N < 10; ++N) {
+	for (N = 4; N < 11; ++N) {
 		cycle_dis.clear();
 		cycle_dis_d.clear();
 		cycle_dis_t_c.clear();
