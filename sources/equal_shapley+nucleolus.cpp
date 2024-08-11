@@ -5,8 +5,8 @@
 *			  Exchange Schemes When Cycle Length Is Unbounded
 *             using the shapley value and nuceolus as initial allocations with equal country sizes
 *
-*    
-*    @version 1.0 09/10/2023
+*
+*    @version 1.0 11/08/2024
 *
 *    This program is free software: you can redistribute it and/or modify
 *    it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ double cpuTime();
 bool is_next_char_digit(string& line, unsigned int l);
 unsigned int char2uint(char& p);
 void undi_lemon(unsigned int& m, vector<unsigned int>& arc_in, vector<unsigned int>& arc_out, vector<unsigned short int>& label_positions, ListGraph& g, ListDigraph& g_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, ListGraph::EdgeMap<double>& edge_card_weight, ListDigraph::ArcMap<unsigned short int>& arc_card_weight, unsigned short int& no_of_nodes);
-void coop_game(ListGraph& g, vector<double>& v, unsigned int& S, vector<unsigned short int>& s, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, ListGraph::EdgeMap<double>& edge_card_weight, bool& dispy, unsigned short int& Vp, unsigned short int& N, ListGraph::NodeMap<bool>& active_nodes, vector<bool>& leaving, map<int, int>& numofMaxSolution, unsigned short int& Q, bool& arbitray_maximum, vector<pair<int, int>>& cycle_distri, map<int, int>& cycle_dis, double& game_generation, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period);
+void coop_game(ListGraph& g, vector<double>& v, unsigned int& S, vector<unsigned short int>& s, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, ListGraph::EdgeMap<double>& edge_card_weight, bool& dispy, unsigned short int& Vp, unsigned short int& N, ListGraph::NodeMap<bool>& active_nodes, vector<bool>& leaving, map<int, int>& numofMaxSolution, unsigned short int& Q, bool& arbitray_maximum, vector<pair<int, int>>& cycle_distri, map<int, int>& cycle_dis, double& game_generation, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period, vector<vector<double>>& time_breakdown, unsigned short int inst);
 void xml_parser(string& line, vector<unsigned short int>& node_labels, vector<unsigned short int>& label_positions, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, unsigned short int& k, ListGraph& g, ListDigraph& g_original, vector<unsigned int>& arc_in, vector<unsigned int>& arc_out, unsigned int& m, unsigned short int& no_of_nodes);
 void shapley(vector<double>& shapl, vector<double>& v, unsigned short int& n, unsigned int& S);
 void de2bi_card(unsigned int& k, vector<bool>& a, unsigned short int& n, unsigned short int& card);
@@ -76,17 +76,17 @@ void initial_pairs(unsigned short int& Vp, unsigned short int& N, ListGraph::Nod
 void arrival_times(vector<unsigned short int>& node_arrives, unsigned short int& Vp, unsigned short int& N, ListGraph::NodeMap<bool>& active_nodes, vector<ListGraph::Node>& c, unsigned short int& periods, bool& disp);
 
 void period_0(unsigned short int& Q, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, vector<unsigned short int>& s, unsigned short int& Vp, vector<unsigned short int>& node_arrives, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, vector<double>& credit);
-void min_d_1(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph& g_original, vector<pair<int, int>>& arc_pair, vector<bool>& leaving, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, bool& disp, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, unsigned short int& Vp, unsigned short int& periods, bool& dispy, vector<unsigned short int>& s, unsigned short int& Q, vector<double>& v, bool& initial_nucl, vector<double>& target, vector<double>& credit, ListGraph::EdgeMap<double>& edge_card_weight, double& t0, vector<vector<unsigned short int>>& actual_alloc, vector<int>& nodeset, vector<pair<int, int>>& cycle_distri, vector<double>& d, double& M_total, double& d_total, bool& c_involved, map<int, int>& cycle_dis, map<int, int>& numofMaxSolution, bool& arbitray_maximum, unsigned short int& initialSize, unsigned int& S, double& core_100, long& negative_core, double& prec, vector<double>& init_alloc, double& d_c_total, unsigned short int inst, bool lex_min, double& max_d, double& game_generation, double& solution_concept_time, double& scenario_time, std::map<int, std::map<int, int>>& cycle_dis_period, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period);
+void min_d_1(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph& g_original, vector<pair<int, int>>& arc_pair, vector<bool>& leaving, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, bool& disp, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, unsigned short int& Vp, unsigned short int& periods, bool& dispy, vector<unsigned short int>& s, unsigned short int& Q, vector<double>& v, bool& initial_nucl, vector<double>& target, vector<double>& credit, ListGraph::EdgeMap<double>& edge_card_weight, double& t0, vector<vector<unsigned short int>>& actual_alloc, vector<int>& nodeset, vector<pair<int, int>>& cycle_distri, vector<double>& d, double& M_total, double& d_total, bool& c_involved, map<int, int>& cycle_dis, map<int, int>& numofMaxSolution, bool& arbitray_maximum, unsigned short int& initialSize, unsigned int& S, double& core_100, long& negative_core, double& prec, vector<double>& init_alloc, double& d_c_total, unsigned short int inst, bool lex_min, double& max_d, double& game_generation, double& solution_concept_time, double& scenario_time, std::map<int, std::map<int, int>>& cycle_dis_period, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period, vector<vector<double>>& average_d_period, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit, vector<vector<double>>& time_breakdown);
 double core_dist(vector<double>& x, vector<double>& v, unsigned short int& N, unsigned int& S);
-void ILP_d1_gurobi(unsigned short int& Q, unsigned short int& N, ListDigraph& g_original, unsigned short int& Vp, vector<unsigned short int>& node_arrives, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<pair<int, int>>& arc_pair, vector<int>& nodeset, vector<vector<unsigned short int>>& actual_alloc, double& M, double& M_total, vector<unsigned short int>& s, vector<pair<int, int>>& cycle_distri, vector<double>& target, vector<bool>& leaving, vector<double>& d, double& d_total, bool& c_involved, vector<double>& credit, map<int, int>& cycle_dis, vector<double>& init_alloc, bool lex_min, unsigned short int inst, std::map<int, std::map<int, int>>& cycle_dis_period);
+void ILP_d1_gurobi(unsigned short int& Q, unsigned short int& N, ListDigraph& g_original, unsigned short int& Vp, vector<unsigned short int>& node_arrives, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<pair<int, int>>& arc_pair, vector<int>& nodeset, vector<vector<unsigned short int>>& actual_alloc, double& M, double& M_total, vector<unsigned short int>& s, vector<pair<int, int>>& cycle_distri, vector<double>& target, vector<bool>& leaving, vector<double>& d, double& d_total, bool& c_involved, vector<double>& credit, map<int, int>& cycle_dis, vector<double>& init_alloc, bool lex_min, unsigned short int inst, std::map<int, std::map<int, int>>& cycle_dis_period, vector<vector<double>>& average_d_period, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit);
 void pair_arcs(unsigned short int& Q, ListDigraph& g_original, vector<unsigned short int>& node_arrives, ListDigraph::NodeMap<bool>& active_nodes_original, vector<pair<int, int>>& arc_pair, vector<int>& nodeset);
-void arbitraryMaximum(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph& g_original, vector<pair<int, int>>& arc_pair, vector<bool>& leaving, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, bool& disp, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, unsigned short int& Vp, unsigned short int& periods, bool& dispy, vector<unsigned short int>& s, unsigned short int& Q, vector<double>& v, bool& initial_nucl, vector<double>& target, vector<double>& credit, ListGraph::EdgeMap<double>& edge_card_weight, double& t0, vector<vector<unsigned short int>>& actual_alloc, vector<int>& nodeset, vector<pair<int, int>>& cycle_distri, vector<double>& d, double& M_total, double& d_total, bool& c_involved, map<int, int>& cycle_dis, map<int, int>& numofMaxSolution, bool& arbitray_maximum, unsigned short int& initialSize, unsigned int& S, double& core_100, long& negative_core, double& prec, vector<double>& init_alloc, unsigned short int inst, double& max_d, double& game_generation, double& solution_concept_time, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period);
+void arbitraryMaximum(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph& g_original, vector<pair<int, int>>& arc_pair, vector<bool>& leaving, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, bool& disp, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, unsigned short int& Vp, unsigned short int& periods, bool& dispy, vector<unsigned short int>& s, unsigned short int& Q, vector<double>& v, bool& initial_nucl, vector<double>& target, vector<double>& credit, ListGraph::EdgeMap<double>& edge_card_weight, double& t0, vector<vector<unsigned short int>>& actual_alloc, vector<int>& nodeset, vector<pair<int, int>>& cycle_distri, vector<double>& d, double& M_total, double& d_total, bool& c_involved, map<int, int>& cycle_dis, map<int, int>& numofMaxSolution, bool& arbitray_maximum, unsigned short int& initialSize, unsigned int& S, double& core_100, long& negative_core, double& prec, vector<double>& init_alloc, unsigned short int inst, double& max_d, double& game_generation, double& solution_concept_time, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period, vector<vector<double>>& average_d_period, vector<vector<double>>& time_breakdown);
 void changing_nodes(ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<bool>& leaving, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, unsigned short int& Vp, vector<unsigned short int>& node_arrives, unsigned short int& Q, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, vector<unsigned short int>& s, vector<double>& d, vector<double>& target);
 void cycle_distribution(std::map<int, std::map<int, int>>& cycle_dis_period, map<int, int>& cycle_dis, vector<pair<int, int>>& cycle_distri, unsigned short int& N, unsigned short int& Q);
-void lex_min_d_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, unsigned short int& Vp, vector<pair<int, int>>& arc_pair, vector<double>& target, vector<double>& credit, vector<GRBVar>& var_lexmin, vector<GRBModel>& vector_model, unsigned short int& track);
-void lex_min_n_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, vector<GRBVar>& var_lexmin, vector<GRBModel>& vector_model, unsigned short int& track);
+void lex_min_d_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, unsigned short int& Vp, vector<pair<int, int>>& arc_pair, vector<double>& target, vector<double>& credit, vector<GRBVar>& var_lexmin, vector<GRBModel>& vector_model, unsigned short int& track, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit, unsigned short int& inst);
+void lex_min_n_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, vector<GRBVar>& var_lexmin, vector<GRBModel>& vector_model, unsigned short int& track, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit, unsigned short int& inst);
 void sort_d_t(vector<double>& d_t, vector<GRBVar>& var_bi, long& col_num, unsigned short int& N, unsigned short int& Vp, vector<pair<int, int>>& arc_pair, vector<double>& target, unsigned short int& t, vector<double>& credit, double& epsilon, vector<GRBVar>& var_lexmin, vector<unsigned short int>& N_star);
-void lexmin_searching(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, unsigned short int& Vp, vector<pair<int, int>>& arc_pair, vector<double>& target, vector<double>& credit, vector<GRBVar>& var_lexmin, unsigned short int inst, vector<GRBModel>& vector_model, unsigned short int& track);
+void lexmin_searching(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, unsigned short int& Vp, vector<pair<int, int>>& arc_pair, vector<double>& target, vector<double>& credit, vector<GRBVar>& var_lexmin, unsigned short int inst, vector<GRBModel>& vector_model, unsigned short int& track, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit);
 void epsilon_func(vector<double>& target, vector<double>& credit, double& epsilon, unsigned short int N);
 double frac(double ori);
 
@@ -102,7 +102,7 @@ int main() {
 	bool d_c = false;
 	bool lexmin_call = false;
 	bool lexmin_c_call = false;
-	bool arbitrary =true;
+	bool arbitrary = true;
 	if (d1) {
 		version = "d1";
 	}
@@ -189,6 +189,20 @@ int main() {
 	vector<double> solution_concept_time_lexmin_c_N(12, 0);
 	unsigned short int N; // number of countries/players
 	unsigned short int inst; // instance number, integer between 0 and 99
+	vector<double> temp_period(24, 0);
+	vector<vector<double>> deviation_period(7, temp_period);
+	vector<vector<vector<double>>> average_d_period(5, deviation_period);
+	vector<double> time_breakdown(400, 0);
+	vector <vector<double>> time_breakdown_temp(7, time_breakdown);
+	vector<vector<vector<double>>> time_breakdown_per_inst(5, time_breakdown_temp);
+	vector<double> time_temp(100, 0);
+	vector<vector<double>> time_prep(7, time_temp), time_graph(7, time_temp);
+	vector<int> not_optimal(100, 0);
+	vector<vector<int>> track_not_optimal_temp(7, not_optimal);
+	vector<vector<vector<int>>> track_not_optimal(4, track_not_optimal_temp);
+	vector<vector<vector<int>>> track_time_limit(4, track_not_optimal_temp);
+	vector<double> temp_relative(7, 0);
+	vector<vector<double>> relative_optimal(4, temp_relative);
 	for (N = 4; N < 11; ++N) {
 		cycle_dis.clear();
 		cycle_dis_d.clear();
@@ -279,6 +293,7 @@ int main() {
 			xml_parser(line, node_labels, label_positions, c, c_b, c_original, k, g, g_original, arc_in, arc_out, m, no_of_nodes);
 			double t1 = cpuTime();
 			data_preparation += t1 - t0;
+			time_prep[N - 4][inst] = t1 - t0;
 
 			unsigned short int periods = years * periods_per_year;
 			vector<unsigned short int> no_of_active_nodes(N, initialSize);
@@ -299,8 +314,8 @@ int main() {
 			getline(seed_doc, line_seed);
 			seed_doc.close();
 			int seed = 0;
-			cout<<"line seed"<<line_seed<<endl;
-			seed = stoi(line_seed); 
+			cout << "line seed" << line_seed << endl;
+			seed = stoi(line_seed);
 			srand(seed);
 			// determining starting pairs and arrival times of others
 			initial_pairs(Vp, N, active_nodes, active_nodes_original, c, c_b, c_original, initialSize);
@@ -326,6 +341,7 @@ int main() {
 			undi_lemon(m, arc_in, arc_out, label_positions, g, g_original, c, c_b, c_original, edge_card_weight, arc_card_weight, no_of_nodes);
 			t1 = cpuTime();
 			graph_building += t1 - t0;
+			time_graph[N - 4][inst] = t1 - t0;
 
 			unsigned int S = pow(2, N) - 2;
 			vector<double> v(S + 1, 0);
@@ -364,9 +380,10 @@ int main() {
 				arbitray_maximum = true;
 				t0 = cpuTime();
 				period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit);
-				arbitraryMaximum(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, initial_nucl, target, credit, edge_card_weight, t0, actual_alloc, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_arbitrary, numofMaxSolution, arbitray_maximum, initialSize, S, core_100, negative_core, prec, init_alloc, inst, max_d, game_generation_arbitrary, solution_concept_time_arbitrary, cycle_dis_arbitrary_period);
+				arbitraryMaximum(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, initial_nucl, target, credit, edge_card_weight, t0, actual_alloc, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_arbitrary, numofMaxSolution, arbitray_maximum, initialSize, S, core_100, negative_core, prec, init_alloc, inst, max_d, game_generation_arbitrary, solution_concept_time_arbitrary, cycle_dis_arbitrary_period, average_d_period[0], time_breakdown_per_inst[0]);
 				t1 = cpuTime();
 				total_time_arbitrary += t1 - t0;
+				time_breakdown_per_inst[0][N - 4][inst * 4] = t1 - t0;
 				arbitray_maximum = false;
 				M_100_d_arbitrary += M_total;
 				relative_d1_arbitrary += (d_total / M_total);
@@ -378,10 +395,14 @@ int main() {
 				cout << N << "countries" << " " << "instance_" << inst << "d1 starts" << endl;
 				period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit);
 				t0 = cpuTime();
-				min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, initial_nucl, target, credit, edge_card_weight, t0, actual_alloc, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_d, numofMaxSolution, arbitray_maximum, initialSize, S, core_100, negative_core, prec, init_alloc, d_c_total, inst, lex_min, max_d, game_generation_d1, solution_concept_time_d1, time_d1, cycle_dis_d_period, cycle_dis_arbitrary_period);
+				min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, initial_nucl, target, credit, edge_card_weight, t0, actual_alloc, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_d, numofMaxSolution, arbitray_maximum, initialSize, S, core_100, negative_core, prec, init_alloc, d_c_total, inst, lex_min, max_d, game_generation_d1, solution_concept_time_d1, time_d1, cycle_dis_d_period, cycle_dis_arbitrary_period, average_d_period[1], track_not_optimal[0], track_time_limit[0], time_breakdown_per_inst[1]);
 				t1 = cpuTime();
 				total_time_d1 += t1 - t0;
+				time_breakdown_per_inst[1][N - 4][inst * 4] = t1 - t0;
 				relative_d1 += (d_total / M_total);
+				if (track_time_limit[0][N - 4][inst] != 9) {
+					relative_optimal[0][N - 4] += d_total / M_total;
+				}
 				max_d1 += max_d;
 				cout << "relative_d1: " << relative_d1 << endl;
 				cout << "the number of countries: " << N << " " << "relative_d1" << " " << inst << " " << relative_d1 / (inst + 1) << endl;
@@ -395,14 +416,18 @@ int main() {
 				c_involved = true;
 				period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit);
 				t0 = cpuTime();
-				min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, initial_nucl, target, credit, edge_card_weight, t0, actual_alloc, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_t_c, numofMaxSolution, arbitray_maximum, initialSize, S, core_100, negative_core, prec, init_alloc, d_c_total, inst, lex_min, max_d, game_generation_d1_c, solution_concept_time_d1_c, time_d1_c, cycle_dis_t_c_period, cycle_dis_arbitrary_period);
+				min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, initial_nucl, target, credit, edge_card_weight, t0, actual_alloc, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_t_c, numofMaxSolution, arbitray_maximum, initialSize, S, core_100, negative_core, prec, init_alloc, d_c_total, inst, lex_min, max_d, game_generation_d1_c, solution_concept_time_d1_c, time_d1_c, cycle_dis_t_c_period, cycle_dis_arbitrary_period, average_d_period[2], track_not_optimal[1], track_time_limit[1], time_breakdown_per_inst[2]);
 				t1 = cpuTime();
 				total_time_d1_c += t1 - t0;
+				time_breakdown_per_inst[2][N - 4][inst * 4] = t1 - t0;
 				relative_d1_initial_allocation += (d_c_total / M_total);
 				max_d1_c += max_d;
 				c_involved = false;
 				M_100_d_c += M_total;
 				relative_d1_c += (d_total / M_total);
+				if (track_time_limit[1][N - 4][inst] != 9) {
+					relative_optimal[1][N - 4] += d_total / M_total;
+				}
 				cout << N << "countries" << " " << "instance_" << inst << "d1+c done..." << endl;
 			}
 			//-------------------lexmin--------------
@@ -411,10 +436,14 @@ int main() {
 				lex_min = true;
 				period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit);
 				t0 = cpuTime();
-				min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, initial_nucl, target, credit, edge_card_weight, t0, actual_alloc, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_lexmin, numofMaxSolution, arbitray_maximum, initialSize, S, core_100, negative_core, prec, init_alloc, d_c_total, inst, lex_min, max_d, game_generation_lexmin, solution_concept_time_lexmin, time_lex_min, cycle_dis_lexmin_period, cycle_dis_arbitrary_period);
+				min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, initial_nucl, target, credit, edge_card_weight, t0, actual_alloc, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_lexmin, numofMaxSolution, arbitray_maximum, initialSize, S, core_100, negative_core, prec, init_alloc, d_c_total, inst, lex_min, max_d, game_generation_lexmin, solution_concept_time_lexmin, time_lex_min, cycle_dis_lexmin_period, cycle_dis_arbitrary_period, average_d_period[3], track_not_optimal[2], track_time_limit[2], time_breakdown_per_inst[3]);
 				t1 = cpuTime();
 				total_time_lex_min += t1 - t0;
+				time_breakdown_per_inst[3][N - 4][inst * 4] = t1 - t0;
 				relative_lexmin_0 += (d_total / M_total);
+				if (track_time_limit[2][N - 4][inst] != 9) {
+					relative_optimal[2][N - 4] += d_total / M_total;
+				}
 				max_lexmin_0 += max_d;
 				lex_min = false;
 				M_lex_min += M_total;
@@ -427,10 +456,14 @@ int main() {
 				c_involved = true;
 				period_0(Q, no_of_active_nodes, N, s, Vp, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit);
 				t0 = cpuTime();
-				min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, initial_nucl, target, credit, edge_card_weight, t0, actual_alloc, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_lexmin_c, numofMaxSolution, arbitray_maximum, initialSize, S, core_100, negative_core, prec, init_alloc, d_c_total, inst, lex_min, max_d, game_generation_lexmin_c, solution_concept_time_lexmin_c, time_lex_min_c, cycle_dis_lexmin_c_period, cycle_dis_arbitrary_period);
+				min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp, periods, dispy, s, Q, v, initial_nucl, target, credit, edge_card_weight, t0, actual_alloc, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_lexmin_c, numofMaxSolution, arbitray_maximum, initialSize, S, core_100, negative_core, prec, init_alloc, d_c_total, inst, lex_min, max_d, game_generation_lexmin_c, solution_concept_time_lexmin_c, time_lex_min_c, cycle_dis_lexmin_c_period, cycle_dis_arbitrary_period, average_d_period[4], track_not_optimal[3], track_time_limit[3], time_breakdown_per_inst[4]);
 				t1 = cpuTime();
 				total_time_lex_min_c += t1 - t0;
+				time_breakdown_per_inst[4][N - 4][inst * 4] = t1 - t0;
 				relative_lexmin_c_0 += (d_total / M_total);
+				if (track_time_limit[3][N - 4][inst] != 9) {
+					relative_optimal[3][N - 4] += d_total / M_total;
+				}
 				max_lexmin_c_0 += max_d;
 				lex_min = false;
 				c_involved = false;
@@ -479,7 +512,7 @@ int main() {
 		solution_concept_time_lexmin_N[N - 4] = solution_concept_time_lexmin / 100;
 		solution_concept_time_lexmin_c_N[N - 4] = solution_concept_time_lexmin_c / 100;
 		ofstream res;
-		res.open(version + "/" + solution_concept + "results.txt", ofstream::out | ofstream::trunc);
+		res.open(version + "/" + solution_concept + "results_" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
 		for (unsigned short int i = 0; i < N - 3; i++) {
 			res << i + 4 << "countries" << endl;
 			if (d1) {
@@ -492,6 +525,41 @@ int main() {
 				res << "scenario time: " << time_d1_N[i] << endl;
 				res << "game generation: " << game_generation_d1_N[i] << endl;
 				res << "solution concept: " << solution_concept_time_d1_N[i] << endl;
+				res << "----------accumulated deviations-------------" << endl;
+				for (int j = 0; j < 24; j++) {
+					res << "round j:" << (double)average_d_period[1][i][j] / 100 << endl;
+				}
+
+				res << "------------not optimal------------------" << endl;
+				int temp = 0;
+				for (int k = 0; k < 100; k++) {
+					if (track_not_optimal[0][i][k] != 0 && track_not_optimal[0][i][k] != 2) {
+						temp++;
+					}
+				}
+				res << "#not optimal:" << temp << endl;
+				res << "---------" << i + 4 << " countries" << "---------" << endl;
+				int track_temp = 0;
+				for (int l : track_not_optimal[0][i]) {
+					res << "inst: " << track_temp << ", " << l << endl;
+					track_temp++;
+				}
+
+				res << "------------reach time limit------------------" << endl;
+				int temp_0 = 0;
+				for (int k = 0; k < 100; k++) {
+					if (track_time_limit[0][i][k] != 0 && track_time_limit[0][i][k] != 2) {
+						temp_0++;
+					}
+				}
+				res << "#time limit:" << temp_0 << endl;
+				res << "relative optimal ratio: " << (double)relative_optimal[0][i] / (100 - temp_0) << endl;
+				res << "---------" << i + 4 << " countries" << "---------" << endl;
+				int track_temp_0 = 0;
+				for (int l : track_time_limit[0][i]) {
+					res << "inst: " << track_temp_0 << ", " << l << endl;
+					track_temp_0++;
+				}
 			}
 			if (d_c) {
 				res << "minimizing d_1_c: " << relative_d1_N_c[i] << endl;
@@ -502,6 +570,41 @@ int main() {
 				res << "scenario time: " << time_d1_c_N[i] << endl;
 				res << "game generation: " << game_generation_d1_c_N[i] << endl;
 				res << "solution concept: " << solution_concept_time_d1_c_N[i] << endl;
+				res << "----------accumulated deviations-------------" << endl;
+				for (int j = 0; j < 24; j++) {
+					res << "round j:" << (double)average_d_period[2][i][j] / 100 << endl;
+				}
+
+				res << "------------not optimal------------------" << endl;
+				int temp = 0;
+				for (int k = 0; k < 100; k++) {
+					if (track_not_optimal[1][i][k] != 0 && track_not_optimal[1][i][k] != 2) {
+						temp++;
+					}
+				}
+				res << "#not optimal:" << temp << endl;
+				res << "---------" << i + 4 << " countries" << "---------" << endl;
+				int track_temp = 0;
+				for (int l : track_not_optimal[1][i]) {
+					res << "inst: " << track_temp << ", " << l << endl;
+					track_temp++;
+				}
+
+				res << "------------reach time limit------------------" << endl;
+				int temp_0 = 0;
+				for (int k = 0; k < 100; k++) {
+					if (track_time_limit[1][i][k] != 0 && track_time_limit[1][i][k] != 2) {
+						temp_0++;
+					}
+				}
+				res << "#time limit:" << temp_0 << endl;
+				res << "relative optimal ratio: " << (double)relative_optimal[1][i] / (100 - temp_0) << endl;
+				res << "---------" << i + 4 << " countries" << "---------" << endl;
+				int track_temp_0 = 0;
+				for (int l : track_time_limit[1][i]) {
+					res << "inst: " << track_temp_0 << ", " << l << endl;
+					track_temp_0++;
+				}
 			}
 			if (lexmin_call) {
 				res << "lex min " << relative_lexmin[i] << endl;
@@ -511,6 +614,41 @@ int main() {
 				res << "scenario time: " << time_lex_min_N[i] << endl;
 				res << "game generation: " << game_generation_lexmin_N[i] << endl;
 				res << "solution concept: " << solution_concept_time_lexmin_N[i] << endl;
+				res << "----------accumulated deviations-------------" << endl;
+				for (int j = 0; j < 24; j++) {
+					res << "round j:" << (double)average_d_period[3][i][j] / 100 << endl;
+				}
+
+				res << "------------not optimal------------------" << endl;
+				int temp = 0;
+				for (int k = 0; k < 100; k++) {
+					if (track_not_optimal[2][i][k] != 0 && track_not_optimal[2][i][k] != 2) {
+						temp++;
+					}
+				}
+				res << "#not optimal:" << temp << endl;
+				res << "---------" << i + 4 << " countries" << "---------" << endl;
+				int track_temp = 0;
+				for (int l : track_not_optimal[2][i]) {
+					res << "inst: " << track_temp << ", " << l << endl;
+					track_temp++;
+				}
+
+				res << "------------reach time limit------------------" << endl;
+				int temp_0 = 0;
+				for (int k = 0; k < 100; k++) {
+					if (track_time_limit[2][i][k] != 0 && track_time_limit[2][i][k] != 2) {
+						temp_0++;
+					}
+				}
+				res << "#time limit:" << temp_0 << endl;
+				res << "relative optimal ratio: " << (double)relative_optimal[2][i] / (100 - temp_0) << endl;
+				res << "---------" << i + 4 << " countries" << "---------" << endl;
+				int track_temp_0 = 0;
+				for (int l : track_time_limit[2][i]) {
+					res << "inst: " << track_temp_0 << ", " << l << endl;
+					track_temp_0++;
+				}
 			}
 			if (arbitrary) {
 				res << "minimizing d_1_arbitrary: " << relative_arbitrary_N[i] << endl;
@@ -520,6 +658,10 @@ int main() {
 				res << "scenario time: " << time_arbitrary_N[i] << endl;
 				res << "game generation: " << game_generation_arbitrary_N[i] << endl;
 				res << "solution concept: " << solution_concept_time_arbitrary_N[i] << endl;
+				res << "----------accumulated deviations-------------" << endl;
+				for (int j = 0; j < 24; j++) {
+					res << "round j:" << (double)average_d_period[0][i][j] / 100 << endl;
+				}
 			}
 			if (lexmin_c_call) {
 				res << "lex min+c " << relative_lexmin_c[i] << endl;
@@ -529,12 +671,111 @@ int main() {
 				res << "scenario time: " << time_lex_min_c_N[i] << endl;
 				res << "game generation: " << game_generation_lexmin_c_N[i] << endl;
 				res << "solution concept: " << solution_concept_time_lexmin_c_N[i] << endl;
+				res << "----------accumulated deviations-------------" << endl;
+				for (int j = 0; j < 24; j++) {
+					res << "round j:" << (double)average_d_period[4][i][j] / 100 << endl;
+				}
+
+				res << "------------not optimal------------------" << endl;
+				int temp = 0;
+				for (int k = 0; k < 100; k++) {
+					if (track_not_optimal[3][i][k] != 0 && track_not_optimal[3][i][k] != 2) {
+						temp++;
+					}
+				}
+				res << "#not optimal:" << temp << endl;
+				res << "---------" << i + 4 << " countries" << "---------" << endl;
+				int track_temp = 0;
+				for (int l : track_not_optimal[3][i]) {
+					res << "inst: " << track_temp << ", " << l << endl;
+					track_temp++;
+				}
+
+				res << "------------reach time limit------------------" << endl;
+				int temp_0 = 0;
+				for (int k = 0; k < 100; k++) {
+					if (track_time_limit[3][i][k] != 0 && track_time_limit[3][i][k] != 2) {
+						temp_0++;
+					}
+				}
+				res << "#time limit:" << temp_0 << endl;
+				res << "relative optimal ratio: " << (double)relative_optimal[3][i] / (100 - temp_0) << endl;
+				res << "---------" << i + 4 << " countries" << "---------" << endl;
+				int track_temp_0 = 0;
+				for (int l : track_time_limit[3][i]) {
+					res << "inst: " << track_temp_0 << ", " << l << endl;
+					track_temp_0++;
+				}
 				res << endl;
 			}
 
 		}
 
 		res.close();
+
+		// time breakdown per instance
+		ofstream res_time;
+		res_time.open(version + "/" + "time_breakdown_" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
+		for (unsigned short int i = 0; i < N - 3; i++) {
+			res_time << "number of countries: " << i + 4 << endl;
+			if (d1) {
+				for (int j = 0; j < 100; j++) {
+					res_time << "---inst " << j << "---" << endl;
+					res_time << "total time: " << time_breakdown_per_inst[1][i][4 * j] << endl;
+					res_time << "data preparation: " << time_prep[i][j] << endl;
+					res_time << "graph building: " << time_graph[i][j] << endl;
+					res_time << "solution concept: " << time_breakdown_per_inst[1][i][4 * j + 1] << endl;
+					res_time << "game generation: " << time_breakdown_per_inst[1][i][4 * j + 2] << endl;
+					res_time << "scenario: " << time_breakdown_per_inst[1][i][4 * j + 3] << endl;
+				}
+			}
+			if (d_c) {
+				for (int j = 0; j < 100; j++) {
+					res_time << "---inst " << j << "---" << endl;
+					res_time << "total time: " << time_breakdown_per_inst[2][i][4 * j] << endl;
+					res_time << "data preparation: " << time_prep[i][j] << endl;
+					res_time << "graph building: " << time_graph[i][j] << endl;
+					res_time << "solution concept: " << time_breakdown_per_inst[2][i][4 * j + 1] << endl;
+					res_time << "game generation: " << time_breakdown_per_inst[2][i][4 * j + 2] << endl;
+					res_time << "scenario: " << time_breakdown_per_inst[2][i][4 * j + 3] << endl;
+				}
+			}
+			if (lexmin_call) {
+				for (int j = 0; j < 100; j++) {
+					res_time << "---inst " << j << "---" << endl;
+					res_time << "total time: " << time_breakdown_per_inst[3][i][4 * j] << endl;
+					res_time << "data preparation: " << time_prep[i][j] << endl;
+					res_time << "graph building: " << time_graph[i][j] << endl;
+					res_time << "solution concept: " << time_breakdown_per_inst[3][i][4 * j + 1] << endl;
+					res_time << "game generation: " << time_breakdown_per_inst[3][i][4 * j + 2] << endl;
+					res_time << "scenario: " << time_breakdown_per_inst[3][i][4 * j + 3] << endl;
+				}
+			}
+			if (lexmin_c_call) {
+				for (int j = 0; j < 100; j++) {
+					res_time << "---inst " << j << "---" << endl;
+					res_time << "total time: " << time_breakdown_per_inst[4][i][4 * j] << endl;
+					res_time << "data preparation: " << time_prep[i][j] << endl;
+					res_time << "graph building: " << time_graph[i][j] << endl;
+					res_time << "solution concept: " << time_breakdown_per_inst[4][i][4 * j + 1] << endl;
+					res_time << "game generation: " << time_breakdown_per_inst[4][i][4 * j + 2] << endl;
+					res_time << "scenario: " << time_breakdown_per_inst[4][i][4 * j + 3] << endl;
+				}
+			}
+			if (arbitrary) {
+				for (int j = 0; j < 100; j++) {
+					res_time << "---inst " << j << "---" << endl;
+					res_time << "total time: " << time_breakdown_per_inst[0][i][4 * j] << endl;
+					res_time << "data preparation: " << time_prep[i][j] << endl;
+					res_time << "graph building: " << time_graph[i][j] << endl;
+					res_time << "solution concept: " << time_breakdown_per_inst[0][i][4 * j + 1] << endl;
+					res_time << "game generation: " << time_breakdown_per_inst[0][i][4 * j + 2] << endl;
+					res_time << "scenario: " << time_breakdown_per_inst[0][i][4 * j + 3] << endl;
+				}
+			}
+
+		}
+		res_time.close();
 
 		// cycle distributions
 		vector<long> check(5, 0);
@@ -684,7 +925,7 @@ int main() {
 
 
 
-void coop_game(ListGraph& g, vector<double>& v, unsigned int& S, vector<unsigned short int>& s, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, ListGraph::EdgeMap<double>& edge_card_weight, bool& dispy, unsigned short int& Vp, unsigned short int& N, ListGraph::NodeMap<bool>& active_nodes, vector<bool>& leaving, map<int, int>& numofMaxSolution, unsigned short int& Q, bool& arbitray_maximum, vector<pair<int, int>>& cycle_distri, map<int, int>& cycle_dis, double& game_generation, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period) {
+void coop_game(ListGraph& g, vector<double>& v, unsigned int& S, vector<unsigned short int>& s, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, ListGraph::EdgeMap<double>& edge_card_weight, bool& dispy, unsigned short int& Vp, unsigned short int& N, ListGraph::NodeMap<bool>& active_nodes, vector<bool>& leaving, map<int, int>& numofMaxSolution, unsigned short int& Q, bool& arbitray_maximum, vector<pair<int, int>>& cycle_distri, map<int, int>& cycle_dis, double& game_generation, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period, vector<vector<double>>& time_breakdown, unsigned short int inst) {
 	vector<bool> a(N, false);
 	double t0 = cpuTime();
 	for (unsigned int i = 0; i < S; i++) {
@@ -714,6 +955,8 @@ void coop_game(ListGraph& g, vector<double>& v, unsigned int& S, vector<unsigned
 	v[S] = grand_coal.matchingWeight();
 	double t1 = cpuTime();
 	game_generation += t1 - t0;
+	time_breakdown[N - 4][inst * 4 + 2] += t1 - t0;
+
 	grand_coal.matchingMap();
 	if (arbitray_maximum) {
 		unsigned short int a = 0;
@@ -2141,7 +2384,7 @@ void period_0(unsigned short int& Q, vector<unsigned short int>& no_of_active_no
 	return;
 }
 
-void min_d_1(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph& g_original, vector<pair<int, int>>& arc_pair, vector<bool>& leaving, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, bool& disp, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, unsigned short int& Vp, unsigned short int& periods, bool& dispy, vector<unsigned short int>& s, unsigned short int& Q, vector<double>& v, bool& initial_nucl, vector<double>& target, vector<double>& credit, ListGraph::EdgeMap<double>& edge_card_weight, double& t0, vector<vector<unsigned short int>>& actual_alloc, vector<int>& nodeset, vector<pair<int, int>>& cycle_distri, vector<double>& d, double& M_total, double& d_total, bool& c_involved, map<int, int>& cycle_dis, map<int, int>& numofMaxSolution, bool& arbitray_maximum, unsigned short int& initialSize, unsigned int& S, double& core_100, long& negative_core, double& prec, vector<double>& init_alloc, double& d_c_total, unsigned short int inst, bool lex_min, double& max_d, double& game_generation, double& solution_concept_time, double& scenario_time, std::map<int, std::map<int, int>>& cycle_dis_period, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period) {
+void min_d_1(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph& g_original, vector<pair<int, int>>& arc_pair, vector<bool>& leaving, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, bool& disp, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, unsigned short int& Vp, unsigned short int& periods, bool& dispy, vector<unsigned short int>& s, unsigned short int& Q, vector<double>& v, bool& initial_nucl, vector<double>& target, vector<double>& credit, ListGraph::EdgeMap<double>& edge_card_weight, double& t0, vector<vector<unsigned short int>>& actual_alloc, vector<int>& nodeset, vector<pair<int, int>>& cycle_distri, vector<double>& d, double& M_total, double& d_total, bool& c_involved, map<int, int>& cycle_dis, map<int, int>& numofMaxSolution, bool& arbitray_maximum, unsigned short int& initialSize, unsigned int& S, double& core_100, long& negative_core, double& prec, vector<double>& init_alloc, double& d_c_total, unsigned short int inst, bool lex_min, double& max_d, double& game_generation, double& solution_concept_time, double& scenario_time, std::map<int, std::map<int, int>>& cycle_dis_period, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period, vector<vector<double>>& average_d_period, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit, vector<vector<double>>& time_breakdown) {
 	Q = 0;
 	d_total = 0;
 	d_c_total = 0;
@@ -2181,7 +2424,7 @@ void min_d_1(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph
 		}
 		// cooperative game and target
 		cout << "start generating values" << endl;
-		coop_game(g, v, S, s, c, c_b, edge_card_weight, dispy, Vp, N, active_nodes, leaving, numofMaxSolution, Q, arbitray_maximum, cycle_distri, cycle_dis, game_generation, cycle_dis_arbitrary_period);
+		coop_game(g, v, S, s, c, c_b, edge_card_weight, dispy, Vp, N, active_nodes, leaving, numofMaxSolution, Q, arbitray_maximum, cycle_distri, cycle_dis, game_generation, cycle_dis_arbitrary_period, time_breakdown, inst);
 		double t0 = cpuTime();
 		if (initial_nucl)
 			nucl(disp, N, S, init_alloc, v, prec);
@@ -2191,6 +2434,7 @@ void min_d_1(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph
 		}
 		double t1 = cpuTime();
 		solution_concept_time += t1 - t0;
+		time_breakdown[N - 4][inst * 4 + 1] += t1 - t0;
 		if (dispy) {
 			if (initial_nucl) {
 				cout << "nucl: ";
@@ -2204,9 +2448,10 @@ void min_d_1(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph
 			cout << endl;
 		}
 		t0 = cpuTime();
-		ILP_d1_gurobi(Q, N, g_original, Vp, node_arrives, active_nodes, active_nodes_original, arc_pair, nodeset, actual_alloc, v[S], M_total, s, cycle_distri, target, leaving, d, d_total, c_involved, credit, cycle_dis, init_alloc, lex_min, inst, cycle_dis_period);
+		ILP_d1_gurobi(Q, N, g_original, Vp, node_arrives, active_nodes, active_nodes_original, arc_pair, nodeset, actual_alloc, v[S], M_total, s, cycle_distri, target, leaving, d, d_total, c_involved, credit, cycle_dis, init_alloc, lex_min, inst, cycle_dis_period, average_d_period, track_not_optimal, track_time_limit);
 		t1 = cpuTime();
 		scenario_time += t1 - t0;
+		time_breakdown[N - 4][inst * 4 + 3] += t1 - t0;
 		Q++;
 		changing_nodes(active_nodes, active_nodes_original, leaving, no_of_active_nodes, N, Vp, node_arrives, Q, c, c_b, c_original, s, d, target);
 		if (dispy)
@@ -2248,7 +2493,7 @@ double core_dist(vector<double>& x, vector<double>& v, unsigned short int& N, un
 	return eps;
 }
 
-void ILP_d1_gurobi(unsigned short int& Q, unsigned short int& N, ListDigraph& g_original, unsigned short int& Vp, vector<unsigned short int>& node_arrives, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<pair<int, int>>& arc_pair, vector<int>& nodeset, vector<vector<unsigned short int>>& actual_alloc, double& M, double& M_total, vector<unsigned short int>& s, vector<pair<int, int>>& cycle_distri, vector<double>& target, vector<bool>& leaving, vector<double>& d, double& d_total, bool& c_involved, vector<double>& credit, map<int, int>& cycle_dis, vector<double>& init_alloc, bool lex_min, unsigned short int inst, std::map<int, std::map<int, int>>& cycle_dis_period) {
+void ILP_d1_gurobi(unsigned short int& Q, unsigned short int& N, ListDigraph& g_original, unsigned short int& Vp, vector<unsigned short int>& node_arrives, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<pair<int, int>>& arc_pair, vector<int>& nodeset, vector<vector<unsigned short int>>& actual_alloc, double& M, double& M_total, vector<unsigned short int>& s, vector<pair<int, int>>& cycle_distri, vector<double>& target, vector<bool>& leaving, vector<double>& d, double& d_total, bool& c_involved, vector<double>& credit, map<int, int>& cycle_dis, vector<double>& init_alloc, bool lex_min, unsigned short int inst, std::map<int, std::map<int, int>>& cycle_dis_period, vector<vector<double>>& average_d_period, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit) {
 	pair_arcs(Q, g_original, node_arrives, active_nodes_original, arc_pair, nodeset);
 	FilterNodes<ListDigraph> sg(g_original, active_nodes_original);
 	long col_num = countArcs(sg) + 1;
@@ -2260,6 +2505,7 @@ void ILP_d1_gurobi(unsigned short int& Q, unsigned short int& N, ListDigraph& g_
 	// Create an environment
 	GRBEnv env = GRBEnv(true);
 	env.set("LogFile", "mip_shapley_lexmin_c.log");
+	env.set("OutputFlag", "0");
 	env.start();
 
 	// Create an empty model
@@ -2391,6 +2637,13 @@ void ILP_d1_gurobi(unsigned short int& Q, unsigned short int& N, ListDigraph& g_
 
 
 	model.optimize();
+	int optimstatus = model.get(GRB_IntAttr_Status);
+	if (optimstatus != 2) {
+		track_not_optimal[N - 4][inst] = optimstatus;
+		if (optimstatus == 9) {
+			track_time_limit[N - 4][inst] = optimstatus;
+		}
+	}
 
 	vector<double> d_t(N, 0);
 	d_t[0] = var_bi[col_num - 1].get(GRB_DoubleAttr_X);
@@ -2408,10 +2661,10 @@ void ILP_d1_gurobi(unsigned short int& Q, unsigned short int& N, ListDigraph& g_
 	std::cout << "finish sorting" << "epsilon:" << epsilon << endl;
 	std::cout << "start n_star_1" << endl;
 	if (lex_min && d_t[0] > 0.5 && abs(epsilon) > pow(10, -4)) {
-		lex_min_n_star(d_t, lex_min, t_star, N, col_num, epsilon, n_star, model, ia, ja, ar, row_num, cnt_2, bound, nodeset, N_star, var_lexmin, vector_model, track);
+		lex_min_n_star(d_t, lex_min, t_star, N, col_num, epsilon, n_star, model, ia, ja, ar, row_num, cnt_2, bound, nodeset, N_star, var_lexmin, vector_model, track, track_not_optimal, track_time_limit, inst);
 	}
 	std::cout << "finish n_star_1" << endl;
-	lexmin_searching(d_t, lex_min, t_star, N, col_num, epsilon, n_star, model, ia, ja, ar, row_num, cnt_2, bound, nodeset, N_star, Vp, arc_pair, init_alloc, credit, var_lexmin, inst, vector_model, track);
+	lexmin_searching(d_t, lex_min, t_star, N, col_num, epsilon, n_star, model, ia, ja, ar, row_num, cnt_2, bound, nodeset, N_star, Vp, arc_pair, init_alloc, credit, var_lexmin, inst, vector_model, track, track_not_optimal, track_time_limit);
 
 	cout << "finish lexmin_searching" << endl;
 
@@ -2457,8 +2710,10 @@ void ILP_d1_gurobi(unsigned short int& Q, unsigned short int& N, ListDigraph& g_
 	cycle_distribution(cycle_dis_period, cycle_dis, cycle_distri, N, Q);
 	std::cout << "maximum size: " << t;
 	cout << "maximum size: " << t;
+	double temp = 0;
 	for (unsigned short int i = 0; i < N; ++i) {
 		d[i] += init_alloc[i] - s[i];
+		temp += abs(d[i]);
 		if (c_involved) {
 			credit[i] += init_alloc[i] - s[i];
 		}
@@ -2468,6 +2723,7 @@ void ILP_d1_gurobi(unsigned short int& Q, unsigned short int& N, ListDigraph& g_
 		cout << "country" << to_string(i) << "init_alloc[i]: " << init_alloc[i] << '/n' << "s[i]: " << s[i] << "d[i]: " << d[i] << "credit[i]: " << credit[i] << endl;
 		//actual_alloc[Q].push_back(s[i]);
 	}
+	average_d_period[N - 4][Q] += temp;
 	return;
 }
 
@@ -2487,7 +2743,7 @@ void pair_arcs(unsigned short int& Q, ListDigraph& g_original, vector<unsigned s
 
 }
 
-void arbitraryMaximum(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph& g_original, vector<pair<int, int>>& arc_pair, vector<bool>& leaving, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, bool& disp, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, unsigned short int& Vp, unsigned short int& periods, bool& dispy, vector<unsigned short int>& s, unsigned short int& Q, vector<double>& v, bool& initial_nucl, vector<double>& target, vector<double>& credit, ListGraph::EdgeMap<double>& edge_card_weight, double& t0, vector<vector<unsigned short int>>& actual_alloc, vector<int>& nodeset, vector<pair<int, int>>& cycle_distri, vector<double>& d, double& M_total, double& d_total, bool& c_involved, map<int, int>& cycle_dis, map<int, int>& numofMaxSolution, bool& arbitray_maximum, unsigned short int& initialSize, unsigned int& S, double& core_100, long& negative_core, double& prec, vector<double>& init_alloc, unsigned short int inst, double& max_d, double& game_generation, double& solution_concept_time, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period) {
+void arbitraryMaximum(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph& g_original, vector<pair<int, int>>& arc_pair, vector<bool>& leaving, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, bool& disp, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, unsigned short int& Vp, unsigned short int& periods, bool& dispy, vector<unsigned short int>& s, unsigned short int& Q, vector<double>& v, bool& initial_nucl, vector<double>& target, vector<double>& credit, ListGraph::EdgeMap<double>& edge_card_weight, double& t0, vector<vector<unsigned short int>>& actual_alloc, vector<int>& nodeset, vector<pair<int, int>>& cycle_distri, vector<double>& d, double& M_total, double& d_total, bool& c_involved, map<int, int>& cycle_dis, map<int, int>& numofMaxSolution, bool& arbitray_maximum, unsigned short int& initialSize, unsigned int& S, double& core_100, long& negative_core, double& prec, vector<double>& init_alloc, unsigned short int inst, double& max_d, double& game_generation, double& solution_concept_time, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period, vector<vector<double>>& average_d_period, vector<vector<double>>& time_breakdown) {
 	Q = 0;
 	d_total = 0;
 	M_total = 0;
@@ -2525,7 +2781,7 @@ void arbitraryMaximum(vector<unsigned short int>& node_arrives, ListGraph& g, Li
 		}
 		// cooperative game and target
 		cout << "start generating values" << endl;
-		coop_game(g, v, S, s, c, c_b, edge_card_weight, dispy, Vp, N, active_nodes, leaving, numofMaxSolution, Q, arbitray_maximum, cycle_distri, cycle_dis, game_generation, cycle_dis_arbitrary_period);
+		coop_game(g, v, S, s, c, c_b, edge_card_weight, dispy, Vp, N, active_nodes, leaving, numofMaxSolution, Q, arbitray_maximum, cycle_distri, cycle_dis, game_generation, cycle_dis_arbitrary_period, time_breakdown, inst);
 		double t0 = cpuTime();
 		if (initial_nucl)
 			nucl(disp, N, S, init_alloc, v, prec);
@@ -2535,11 +2791,13 @@ void arbitraryMaximum(vector<unsigned short int>& node_arrives, ListGraph& g, Li
 		}
 		double t1 = cpuTime();
 		solution_concept_time += t1 - t0;
+		time_breakdown[N - 4][inst * 4 + 1] += t1 - t0;
 		M_total += v[S];
 
-
+		double temp_0 = 0;
 		for (unsigned short int i = 0; i < N; ++i) {
 			d[i] += init_alloc[i] - s[i];
+			temp_0 += abs(d[i]);
 			if (c_involved) {
 				credit[i] += init_alloc[i] - s[i];
 			}
@@ -2548,7 +2806,7 @@ void arbitraryMaximum(vector<unsigned short int>& node_arrives, ListGraph& g, Li
 			}
 			cout << "country" << to_string(i) << "init_alloc[i]: " << init_alloc[i] << '/n' << "s[i]: " << s[i] << "d[i]: " << d[i] << "credit[i]: " << credit[i] << endl;
 		}
-
+		average_d_period[N - 4][Q] += temp_0;
 
 		Q++;
 		changing_nodes(active_nodes, active_nodes_original, leaving, no_of_active_nodes, N, Vp, node_arrives, Q, c, c_b, c_original, s, d, target);
@@ -2683,7 +2941,7 @@ double frac(double ori) {
 	return abs_frac;
 }
 
-void lex_min_n_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, vector<GRBVar>& var_lexmin, vector<GRBModel>& vector_model, unsigned short int& track) {
+void lex_min_n_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, vector<GRBVar>& var_lexmin, vector<GRBModel>& vector_model, unsigned short int& track, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit, unsigned short int& inst) {
 	++track;
 	std::cout << "t_star: " << t_star << endl;
 	vector<GRBVar> var_bi(col_num + N * (t_star + 3));
@@ -2763,6 +3021,15 @@ void lex_min_n_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_st
 	//std::cout << "finish loading constraint 6" << endl;
 	std::cout << "finish loading constraints" << endl;
 	vector_model[track].optimize();
+
+	int optimstatus = vector_model[track].get(GRB_IntAttr_Status);
+	if (optimstatus != 2) {
+		track_not_optimal[N - 4][inst] = optimstatus;
+		if (optimstatus == 9) {
+			track_time_limit[N - 4][inst] = optimstatus;
+		}
+	}
+
 	for (unsigned short int i = 0; i < t_star + 1; ++i) {
 		for (unsigned short int j = 0; j < N; ++j) {
 			std::cout << "t: " << i << " " << "country:" << j << ": " << var_bi[col_num + N * (2 + i) + j].get(GRB_DoubleAttr_X) << endl;
@@ -2789,7 +3056,7 @@ void lex_min_n_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_st
 
 }
 
-void lex_min_d_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, unsigned short int& Vp, vector<pair<int, int>>& arc_pair, vector<double>& target, vector<double>& credit, vector<GRBVar>& var_lexmin, vector<GRBModel>& vector_model, unsigned short int& track) {
+void lex_min_d_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, unsigned short int& Vp, vector<pair<int, int>>& arc_pair, vector<double>& target, vector<double>& credit, vector<GRBVar>& var_lexmin, vector<GRBModel>& vector_model, unsigned short int& track, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit, unsigned short int& inst) {
 	++track;
 	vector<GRBVar> var_bi(col_num + N * (t_star + 3));
 	//arc variables
@@ -2857,13 +3124,22 @@ void lex_min_d_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_st
 	}
 
 	vector_model[track].optimize();
+
+	int optimstatus = vector_model[track].get(GRB_IntAttr_Status);
+	if (optimstatus != 2) {
+		track_not_optimal[N - 4][inst] = optimstatus;
+		if (optimstatus == 9) {
+			track_time_limit[N - 4][inst] = optimstatus;
+		}
+	}
+
 	sort_d_t(d_t, var_bi, col_num, N, Vp, arc_pair, target, t_star, credit, epsilon, var_lexmin, N_star);
 }
 
-void lexmin_searching(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, unsigned short int& Vp, vector<pair<int, int>>& arc_pair, vector<double>& target, vector<double>& credit, vector<GRBVar>& var_lexmin, unsigned short int inst, vector<GRBModel>& vector_model, unsigned short int& track) {
+void lexmin_searching(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, unsigned short int& Vp, vector<pair<int, int>>& arc_pair, vector<double>& target, vector<double>& credit, vector<GRBVar>& var_lexmin, unsigned short int inst, vector<GRBModel>& vector_model, unsigned short int& track, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit) {
 	while (lex_min && abs(d_t[t_star - 1]) > 0.5 && n_star < N) {
 		std::cout << "begin search d_t" << endl;
-		lex_min_d_star(d_t, lex_min, t_star, N, col_num, epsilon, n_star, model, ia, ja, ar, row_num, cnt_2, bound, nodeset, N_star, Vp, arc_pair, target, credit, var_lexmin, vector_model, track);
+		lex_min_d_star(d_t, lex_min, t_star, N, col_num, epsilon, n_star, model, ia, ja, ar, row_num, cnt_2, bound, nodeset, N_star, Vp, arc_pair, target, credit, var_lexmin, vector_model, track, track_not_optimal, track_time_limit, inst);
 		std::cout << "inst: " << inst << endl;
 		std::cout << "abs(d_t[t_star])" << abs(d_t[t_star]) << endl;
 		std::cout << "t_star: " << t_star << endl;
@@ -2887,13 +3163,13 @@ void lexmin_searching(vector<double>& d_t, bool& lex_min, unsigned short int& t_
 					}
 					else {
 						std::cout << "congratulations d_t[t_star + 1] > 0.5" << endl;
-						lex_min_n_star(d_t, lex_min, t_star, N, col_num, epsilon, n_star, model, ia, ja, ar, row_num, cnt_2, bound, nodeset, N_star, var_lexmin, vector_model, track);
+						lex_min_n_star(d_t, lex_min, t_star, N, col_num, epsilon, n_star, model, ia, ja, ar, row_num, cnt_2, bound, nodeset, N_star, var_lexmin, vector_model, track, track_not_optimal, track_time_limit, inst);
 					}
 				}
 			}
 			if (abs(epsilon) < pow(10, -4)) {
 				std::cout << "congratulations abs(epsilon) < pow(10, -7))" << endl;
-				lexmin_searching(d_t, lex_min, t_star, N, col_num, epsilon, n_star, model, ia, ja, ar, row_num, cnt_2, bound, nodeset, N_star, Vp, arc_pair, target, credit, var_lexmin, inst, vector_model, track);
+				lexmin_searching(d_t, lex_min, t_star, N, col_num, epsilon, n_star, model, ia, ja, ar, row_num, cnt_2, bound, nodeset, N_star, Vp, arc_pair, target, credit, var_lexmin, inst, vector_model, track, track_not_optimal, track_time_limit);
 			}
 		}
 		else {
