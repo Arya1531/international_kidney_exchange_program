@@ -1,0 +1,2571 @@
+/*
+*    int_kidney_exchange
+*    tau_inequal.cpp
+*    Purpose: computational study for
+*             Benedek et al. (2021) - Computing Balanced Solutions for
+*             Large Kidney Exchange Schemes
+*             https://arxiv.org/abs/2109.06788
+*             tau value allocations with equal country sizes
+*
+*    @developer Xin Ye
+*    @version 1.0 11/08/2024
+*
+*    This program is free software: you can redistribute it and/or modify
+*    it under the terms of the GNU General Public License as published by
+*    the Free Software Foundation, either version 3 of the License, or
+*    (at your option) any later version.
+*
+*    This program is distributed in the hope that it will be useful,
+*    but WITHOUT ANY WARRANTY; without even the implied warranty of
+*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+*    GNU General Public License for more details.
+*
+*    You should have received a copy of the GNU General Public License
+*    along with this program. If not, see:
+*    <https://github.com/blrzsvrzs/int_kidney_exchange>.
+*/
+
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <vector>
+#include <lemon/list_graph.h> // needed for ListDigraph
+#include <lemon/matching.h>
+#include <lemon/adaptors.h>
+#include <lemon/core.h>
+#include <lemon/base.cc>
+#include <time.h>
+#include <glpk.h>
+#include <iomanip>
+#include <cfloat>
+
+#include <math.h>
+#include <stdio.h>
+#include <iterator>
+#include "gurobi_c++.h"
+
+
+using namespace lemon;
+using namespace std;
+
+double cpuTime();
+bool is_next_char_digit(string& line, unsigned int l);
+unsigned int char2uint(char& p);
+void undi_lemon(unsigned int& m, vector<unsigned int>& arc_in, vector<unsigned int>& arc_out, vector<unsigned short int>& label_positions, ListGraph& g, ListDigraph& g_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, ListGraph::EdgeMap<double>& edge_card_weight, ListDigraph::ArcMap<unsigned short int>& arc_card_weight, unsigned short int& no_of_nodes);
+void coop_game(ListGraph& g, vector<double>& v, vector<double>& v_impu, vector<double>& v_S, unsigned int& S, vector<unsigned short int>& s, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, ListGraph::EdgeMap<double>& edge_card_weight, bool& dispy, vector<unsigned short int>& Vp_start, unsigned short int& N, ListGraph::NodeMap<bool>& active_nodes, vector<bool>& leaving, unsigned short int& Q, bool& arbitray_maximum, vector<pair<int, int>>& cycle_distri, map<int, int>& cycle_dis, double& game_generation, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period, vector<vector<double>>& time_breakdown, unsigned short int inst);
+void xml_parser(string& line, vector<unsigned short int>& node_labels, vector<unsigned short int>& label_positions, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, unsigned short int& k, ListGraph& g, ListDigraph& g_original, vector<unsigned int>& arc_in, vector<unsigned int>& arc_out, unsigned int& m, unsigned short int& no_of_nodes);
+
+void min_d_1(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph& g_original, vector<pair<int, int>>& arc_pair, vector<bool>& leaving, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, bool& disp, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, vector<unsigned short int>& Vp_start, unsigned short int& periods, bool& dispy, vector<unsigned short int>& s, unsigned short int& Q, vector<double>& v, bool& target_omega, vector<double>& target, vector<double>& credit, ListGraph::EdgeMap<double>& edge_card_weight, double& t0, vector<vector<unsigned short int>>& actual_alloc, vector<double>& v_impu, vector<int>& nodeset, vector<pair<int, int>>& cycle_distri, vector<double>& d, double& M_total, double& d_total, bool& c_involved, map<int, int>& cycle_dis, bool& arbitray_maximum, vector<double>& v_S, unsigned int& S, double& d_c_total, int& convex, int& quasibalanced, int& coincidence, unsigned short int inst, bool& lex_min, std::map<int, std::map<int, int>>& cycle_dis_period, int& unique, double& game_generation, double& solution_time, double& scenario_time, double& max_d, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period, vector<vector<double>>& average_d_period, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit, vector<vector<double>>& time_breakdown);
+void arbitraryMaximum(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph& g_original, vector<pair<int, int>>& arc_pair, vector<bool>& leaving, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, bool& disp, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, vector<unsigned short int>& Vp_start, unsigned short int& periods, bool& dispy, vector<unsigned short int>& s, unsigned short int& Q, vector<double>& v, bool& target_omega, vector<double>& target, vector<double>& credit, ListGraph::EdgeMap<double>& edge_card_weight, double& t0, vector<vector<unsigned short int>>& actual_alloc, vector<double>& v_impu, vector<int>& nodeset, vector<pair<int, int>>& cycle_distri, vector<double>& d, double& M_total, double& d_total, bool& c_involved, map<int, int>& cycle_dis, bool& arbitray_maximum, vector<double>& v_S, unsigned int& S, int& convex, int& quasibalanced, int& coincidence, unsigned short int inst, double& max_d, int& unique, double& game_generation, double& solution_time, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period, vector<vector<double>>& average_d_period, vector<vector<double>>& time_breakdown);
+void initial_pairs(vector<unsigned short int>& Vp_start, unsigned short int& N, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original);
+void period_0(unsigned short int& Q, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, vector<unsigned short int>& s, vector<unsigned short int>& Vp, vector<unsigned short int>& Vp_start, vector<unsigned short int>& node_arrives, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, vector<double>& credit);
+void arrival_times(vector<unsigned short int>& node_arrives, vector<unsigned short int>& Vp_start, unsigned short int& N, ListGraph::NodeMap<bool>& active_nodes, vector<ListGraph::Node>& c, unsigned short int& periods);
+void changing_nodes(ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<bool>& leaving, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, vector<unsigned short int>& Vp_start, vector<unsigned short int>& node_arrives, unsigned short int& Q, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, vector<unsigned short int>& s, vector<double>& d, vector<double>& target);
+void de2bi(unsigned int& k, vector<bool>& a, unsigned short int& N);
+double core_dist(vector<double>& x, vector<double>& v_impu, vector<double>& v_S, unsigned short int& N, unsigned int& S);
+void ILP_d1_gurobi(unsigned short int& Q, unsigned short int& N, ListDigraph& g_original, vector<unsigned short int>& Vp_start, vector<unsigned short int>& node_arrives, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<pair<int, int>>& arc_pair, vector<int>& nodeset, vector<vector<unsigned short int>>& actual_alloc, double& M, double& M_total, vector<unsigned short int>& s, vector<pair<int, int>>& cycle_distri, vector<double>& target, vector<bool>& leaving, vector<double>& d, double& d_total, bool& c_involved, vector<double>& credit, map<int, int>& cycle_dis, vector<double>& init_alloc, bool lex_min, unsigned short int inst, std::map<int, std::map<int, int>>& cycle_dis_period, vector<vector<double>>& average_d_period, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit);
+double tau(vector<double>& benefit, unsigned short int& n, unsigned int& s, double& prec, bool& disp, vector<double>& tau_value, bool& quasibal, vector<double>& v_s);
+bool convex_game(unsigned short int& n, unsigned int& s, vector<double>& v, double& prec);
+void de2bi_card(unsigned int& k, vector<bool>& a, unsigned short int& n, unsigned short int& card);
+double frac(double ori);
+void epsilon_func(vector<double> target, vector<double> credit, double& epsilon, unsigned short int N);
+void lex_min_n_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, vector<GRBVar>& var_lexmin, vector<GRBModel>& vector_model, unsigned short int& track, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit, unsigned short int& inst);
+void lex_min_d_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, vector<unsigned short int>& Vp_start, vector<pair<int, int>>& arc_pair, vector<double>& target, vector<double>& credit, vector<GRBVar>& var_lexmin, vector<GRBModel>& vector_model, unsigned short int& track, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit, unsigned short int& inst);
+void lexmin_searching(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, vector<unsigned short int>& Vp_start, vector<pair<int, int>>& arc_pair, vector<double>& target, vector<double>& credit, vector<GRBVar>& var_lexmin, unsigned short int inst, vector<GRBModel>& vector_model, unsigned short int& track, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit);
+void sort_d_t(vector<double>& d_t, vector<GRBVar>& var_bi, long& col_num, unsigned short int& N, vector<unsigned short int>& Vp_start, vector<pair<int, int>>& arc_pair, vector<double>& target, unsigned short int& t, vector<double>& credit, double& epsilon, vector<GRBVar>& var_lexmin, vector<unsigned short int>& N_star);
+void cycle_distribution(std::map<int, std::map<int, int>>& cycle_dis_period, map<int, int>& cycle_dis, vector<pair<int, int>>& cycle_distri, unsigned short int& N, unsigned short int& Q);
+void pair_arcs(unsigned short int& Q, ListDigraph& g_original, vector<unsigned short int>& node_arrives, ListDigraph::NodeMap<bool>& active_nodes_original, vector<pair<int, int>>& arc_pair, vector<int>& nodeset);
+void country_sizes(unsigned short int& N, vector<unsigned short int>& Vp, vector<unsigned short int>& Vp_start, bool& dispy, unsigned short int& graph_size);
+
+int main() {
+	try {
+		cout << "I solemnly swear that I am up to no good." << endl;
+		bool target_omega = true; // true: benefit value, false: constribution value
+		bool dispy = false; // true: information in terminal while running
+		bool disp = false; // true: extremely detailed information while running, avoid with large graphs
+		bool c_involved = false;// true: credits considred; false:without credits 
+		bool lex_min = false;
+		bool arbitray_maximum = false; //true: arbitrary maximum cycle packing
+		string solution_concept = "tau_value";
+		string version;
+		bool d1 = false;
+		bool d_c = false;
+		bool lexmin_call = false;
+		bool lexmin_c_call = false;
+		bool arbitrary = true;
+		bool equal = false;
+		string country_size;
+		if (equal) {
+			country_size = "equal";
+		}
+		else {
+			country_size = "inequal";
+		}
+
+		if (d1) {
+			version = "d1";
+		}
+		else {
+			if (lexmin_call) {
+				version = "lexmin_call";
+			}
+			if (lexmin_c_call) {
+				version = "lexmin_c_call";
+			}
+			if (d_c) {
+				version = "d1_c";
+			}
+			if (arbitrary) {
+				version = "arbitrary";
+			}
+		}
+
+		unsigned short int years = 6;
+		unsigned short int periods_per_year = 4;
+		double t0 = cpuTime();
+		// input parameters and data
+		unsigned short int N;
+		unsigned short int inst; // instance number, integer between 0 and 99
+		vector<double> temp_period(24, 0);
+		vector<vector<double>> deviation_period(7, temp_period);
+		vector<vector<vector<double>>> average_d_period(5, deviation_period);
+		map<int, int> cycle_dis;
+		map<int, int> cycle_dis_d;
+		map<int, int> cycle_dis_t_c;
+		map<int, int> cycle_dis_arbitrary;
+		map<int, int> cycle_dis_lexmin;
+		map<int, int> cycle_dis_lexmin_c;
+		map<int, map<int, int>> cycle_dis_d_period;
+		map<int, map<int, int>> cycle_dis_t_c_period;
+		map<int, map<int, int>> cycle_dis_arbitrary_period;
+		map<int, map<int, int>> cycle_dis_lexmin_period;
+		map<int, map<int, int>> cycle_dis_lexmin_c_period;
+		vector<double> relative_d1_N(7, 0);
+		vector<double> relative_d1_N_c(7, 0);
+		vector<double> relative_arbitrary_N(7, 0);
+		vector<double> relative_d1_N_initial_allocation(7, 0);
+		vector<double> relative_lexmin(7, 0);
+		vector<double> relative_lexmin_c(7, 0);
+		vector<double> max_d1_N(7, 0);
+		vector<double> max_d1_N_c(7, 0);
+		vector<double> max_arbitrary_N(7, 0);
+		vector<double> max_lexmin(7, 0);
+		vector<double> max_lexmin_c(7, 0);
+		vector<double> M_N(7, 0);
+		vector<double> M_N_d_c(7, 0);
+		vector<double> M_N_d_arbitrary(7, 0);
+		vector<double> M_N_lex_min(7, 0);
+		vector<double> M_N_lex_min_c(7, 0);
+		vector<double> convex_d_rate(7, 0);
+		vector<double> convex_d_c_rate(7, 0);
+		vector<double> convex_d_arbitary_rate(7, 0);
+		vector<double> convex_lexmin_rate(7, 0);
+		vector<double> convex_lexmin_c_rate(7, 0);
+		vector<double> quansibalanced_d_rate(7, 0);
+		vector<double> quansibalanced_d_c_rate(7, 0);
+		vector<double> quansibalanced_d_arbitary_rate(7, 0);
+		vector<double> quansibalanced_lexmin_rate(7, 0);
+		vector<double> quansibalanced_lexmin_c_rate(7, 0);
+		vector<double> coincidence_d_rate(7, 0);
+		vector<double> coincidence_d_c_rate(7, 0);
+		vector<double> coincidence_d_arbitary_rate(7, 0);
+		vector<double> coincidence_lexmin_rate(7, 0);
+		vector<double> coincidence_lexmin_c_rate(7, 0);
+		vector<double> data_preparation_N(7, 0);
+		vector<double> graph_building_N(7, 0);
+		vector<double> game_generation_arbitrary_N(7, 0);
+		vector<double> game_generation_d1_N(7, 0);
+		vector<double> game_generation_d1_c_N(7, 0);
+		vector<double> game_generation_lexmin_N(7, 0);
+		vector<double> game_generation_lexmin_c_N(7, 0);
+		vector<double> time_arbitrary_N(7, 0);
+		vector<double> time_d1_N(7, 0);
+		vector<double> time_d1_c_N(7, 0);
+		vector<double> time_lex_min_N(7, 0);
+		vector<double> time_lex_min_c_N(7, 0);
+		vector<double> total_time_arbitrary_N(7, 0);
+		vector<double> total_time_d1_N(7, 0);
+		vector<double> total_time_d1_c_N(7, 0);
+		vector<double> total_time_lex_min_N(7, 0);
+		vector<double> total_time_lex_min_c_N(7, 0);
+		vector<double> solution_concept_time_arbitrary_N(7, 0);
+		vector<double> solution_concept_time_d1_N(7, 0);
+		vector<double> solution_concept_time_d1_c_N(7, 0);
+		vector<double> solution_concept_time_lexmin_N(7, 0);
+		vector<double> solution_concept_time_lexmin_c_N(7, 0);
+		vector<double> temp(7, 0);
+		vector<vector<double>> unique_imputation(5, temp), num_of_convex(5, temp), coincidence(5, temp), quasiblanced(5, temp);
+		vector<double> time_breakdown(400, 0);
+		vector <vector<double>> time_breakdown_temp(7, time_breakdown);
+		vector<vector<vector<double>>> time_breakdown_per_inst(5, time_breakdown_temp);
+		vector<double> time_temp(100, 0);
+		vector<vector<double>> time_prep(7, time_temp), time_graph(7, time_temp);
+		vector<int> not_optimal(100, 0);
+		vector<vector<int>> track_not_optimal_temp(7, not_optimal);
+		vector<vector<vector<int>>> track_not_optimal(4, track_not_optimal_temp);
+		vector<vector<vector<int>>> track_time_limit(4, track_not_optimal_temp);
+		vector<double> temp_relative(7, 0);
+		vector<vector<double>> relative_optimal(4, temp_relative);
+		for (N = 4; N < 11; ++N) {
+			cycle_dis.clear();
+			cycle_dis_d.clear();
+			cycle_dis_t_c.clear();
+			cycle_dis_arbitrary.clear();
+			cycle_dis_lexmin.clear();
+			cycle_dis_lexmin_c.clear();
+			double relative_d1 = 0;
+			double relative_d1_c = 0;
+			double relative_d1_arbitrary = 0;
+			double relative_d1_initial_allocation = 0;
+			double relative_lexmin_0 = 0;
+			double relative_lexmin_c_0 = 0;
+			double M_100 = 0;
+			double M_100_d_c = 0;
+			double M_100_d_arbitrary = 0;
+			double M_lex_min = 0;
+			double M_lex_min_c = 0;
+			double max_d1 = 0;
+			double max_d1_c = 0;
+			double max_d1_arbitrary = 0;
+			double max_lexmin_0 = 0;
+			double max_lexmin_c_0 = 0;
+			vector<int> convex_combined(5, 0);
+			vector<int> quasibalanced_combined(5, 0);
+			vector<int> coincidence_combined(5, 0);
+			vector<int> unique_combined(5, 0);
+			double data_preparation = 0;
+			double graph_building = 0;
+			vector<double> game_generation(5, 0), time(5, 0), total_time(5, 0), solution_time(5, 0);
+
+			for (inst = 0; inst < 100; ++inst) {
+				cout << N << "countries" << " " << "instance_" << inst << endl;
+				string line;
+				ifstream inp;
+				unsigned short int graph_size = 2000;
+				inp.open("/home/kllg37/data/genxml-" + to_string(inst) + ".xml"); // 1 out of the 100 instances generated by William Pettersson's web tool: https://wpettersson.github.io/kidney-webapp/#/
+				getline(inp, line);
+				inp.close();
+
+				// building the (undirected) compatibility and the (directed) 'matching' graphs
+				vector<unsigned short int> Vp(N, 0);
+				vector<unsigned short int> Vp_start(N + 1, 0);
+				country_sizes(N, Vp, Vp_start, dispy, graph_size);
+				//cout <<"Vp"<< Vp << endl;
+				unsigned short int no_of_nodes = Vp_start[N];
+				//cout << "no_of_nodes: "<<no_of_nodes << endl;
+				vector<unsigned int> arc_out(0, 0);
+				vector<unsigned int> arc_in(0, 0);
+				unsigned int m = 0;
+				unsigned short int k = 0;
+				unsigned short int M = 0;//changed by XY: maximum size of cycle packing
+				double M_total = 0;//changed by XY: maximum size of cycle packing
+				vector<unsigned short int> node_labels(no_of_nodes, 0);
+				vector<unsigned short int> label_positions(graph_size, graph_size + 1);
+				unsigned int S = pow(2, N) - 2;
+				ListGraph g;
+				ListDigraph g_original; //changed by XY, creating an original graph
+				vector<ListGraph::Node> c(no_of_nodes);
+				vector<ListGraph::Node> c_b(no_of_nodes); //changed by XY, creating an independent set of vertices for the biparite graph
+				vector<ListDigraph::Node> c_original(no_of_nodes);//changed by XY, creating a node set for the original graph
+				double t0 = cpuTime();
+				xml_parser(line, node_labels, label_positions, c, c_b, c_original, k, g, g_original, arc_in, arc_out, m, no_of_nodes);
+				double t1 = cpuTime();
+				data_preparation += t1 - t0;
+				// determining starting pairs and arrival times of others
+				unsigned short int periods = years * periods_per_year;
+				unsigned short int initialSize = Vp_start[N] / 4;
+				vector<unsigned short int> no_of_active_nodes(N, initialSize); //initial active nodes for the period 0
+				ListGraph::NodeMap<bool> active_nodes(g);
+				ListDigraph::NodeMap<bool> active_nodes_original(g_original);
+				for (unsigned short int i = 0; i < N; i++) {
+					no_of_active_nodes[i] = Vp[i] / 4;
+					for (unsigned short int j = 0; j < Vp_start[i + 1]; j++) {
+						active_nodes[c[j]] = false;
+						active_nodes[c_b[j]] = false;
+						active_nodes_original[c_original[j]] = false;
+					}
+				}
+				//read the seed
+				string line_seed;
+				ifstream seed_doc;
+				cout << "start reading the seed doc" << endl;
+				seed_doc.open("/home/kllg37/seeds/n" + to_string(N) + "inst" + to_string(inst) + ".txt");
+				getline(seed_doc, line_seed);
+				seed_doc.close();
+				unsigned int seed = 0;
+				seed = stoi(line_seed); // for instance genxml-0.xml it is 18397106 for N=4, 20469263 for N=5, 22805501 for N=6, 25083567 for N=7, 27432197 for N=8, 30095162 for N=9, 33411331 for N=10, 6368187 for N=11, 13109406 for N=12, 23969593 for N=13, 43358281 for N=14, 79289906 for N=15
+				//inp.open("n" + to_string(N) + "inst" + to_string(inst) + ".txt");
+				//inp >> seed;
+				//inp.close();
+				//cout << seed;
+				srand(seed);
+				initial_pairs(Vp_start, N, active_nodes, active_nodes_original, c, c_b, c_original);
+				vector<unsigned short int> node_arrives(no_of_nodes, 0);
+				arrival_times(node_arrives, Vp_start, N, active_nodes, c, periods);
+
+
+
+				t0 = cpuTime();
+				ListGraph::EdgeMap<double> edge_card_weight(g, 0);
+				ListDigraph::ArcMap<unsigned short int> arc_card_weight(g_original, 0);
+				undi_lemon(m, arc_in, arc_out, label_positions, g, g_original, c, c_b, c_original, edge_card_weight, arc_card_weight, no_of_nodes);
+				//cout << "c.size(): "<<c.size() << '\n' << "c_b.size(): "<<c_b.size() << endl;
+				t1 = cpuTime();
+				graph_building += t1 - t0;
+
+				vector<double> v_impu(N, 0);
+				vector<double> v(N + 1, 0);
+				vector<double> v_S(S, 0);
+				vector<unsigned short int> s(N, 0);
+				vector<vector<unsigned short int>> actual_alloc_d1C(periods, vector<unsigned short int>(N, 0));
+				vector<vector<unsigned short int>> actual_alloc_d1(periods, vector<unsigned short int>(N, 0));
+				vector<vector<unsigned short int>> actual_alloc_rand(periods, vector<unsigned short int>(N, 0));
+				double prec = pow(10, -7);
+				vector<double> target(N, 0);
+				vector<double> tau_value(N, 0);
+				vector<vector<double>> init_alloc_d1C(periods, vector<double>(N, 0));
+				vector<vector<double>> init_alloc_d1(periods, vector<double>(N, 0));
+				vector<vector<double>> init_alloc_rand(periods, vector<double>(N, 0));
+				vector<double> credit(N, 0);
+				//vector<unsigned short int> w(N, 0);
+				vector<bool> leaving(no_of_nodes, false);
+				unsigned short int Q = 0;
+				//set the active nodes for the period 0
+				period_0(Q, no_of_active_nodes, N, s, Vp, Vp_start, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit);
+
+				t0 = cpuTime();
+				vector<pair<int, int>> arc_pair;
+				vector<vector<unsigned short int>> actual_alloc;
+				vector<int> nodeset(2000, 0);
+				vector<pair<int, int>> cycle_distri;
+				vector<double> d(N, 0);
+				double d_total = 0;
+				double d_c_total = 0;
+				double max_d = 0;
+				//--------------arbitray maximum cycle packing--------------------
+				if (arbitrary) {
+					cout << N << "countries" << " " << "instance_" << inst << "arbitrary starts" << endl;
+					arbitray_maximum = true;
+					t0 = cpuTime();
+					period_0(Q, no_of_active_nodes, N, s, Vp, Vp_start, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit);
+					arbitraryMaximum(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp_start, periods, dispy, s, Q, v, target_omega, target, credit, edge_card_weight, t0, actual_alloc, v_impu, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_arbitrary, arbitray_maximum, v_S, S, convex_combined[0], quasibalanced_combined[0], coincidence_combined[0], inst, max_d, unique_combined[0], game_generation[0], solution_time[0], cycle_dis_arbitrary_period, average_d_period[0], time_breakdown_per_inst[0]);
+					t1 = cpuTime();
+					total_time[0] += t1 - t0;
+					time_breakdown_per_inst[0][N - 4][inst * 4] = t1 - t0;
+					arbitray_maximum = false;
+					M_100_d_arbitrary += M_total;
+					relative_d1_arbitrary += (d_total / M_total);
+					max_d1_arbitrary += max_d;
+					cout << N << "countries" << " " << "instance_" << inst << "arbitrary done...";
+				}
+				//------------------d1------------------
+				if (d1) {
+					cout << "start minimizing d_1" << endl;
+					t0 = cpuTime();
+					period_0(Q, no_of_active_nodes, N, s, Vp, Vp_start, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit);
+					min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp_start, periods, dispy, s, Q, v, target_omega, target, credit, edge_card_weight, t0, actual_alloc, v_impu, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_d, arbitray_maximum, v_S, S, d_c_total, convex_combined[1], quasibalanced_combined[1], coincidence_combined[1], inst, lex_min, cycle_dis_d_period, unique_combined[1], game_generation[1], solution_time[1], time[1], max_d, cycle_dis_arbitrary_period, average_d_period[1], track_not_optimal[0], track_time_limit[0], time_breakdown_per_inst[1]);
+					t1 = cpuTime();
+					total_time[1] += t1 - t0;
+					time_breakdown_per_inst[1][N - 4][inst * 4] = t1 - t0;
+					if (track_time_limit[0][N - 4][inst] != 9) {
+						relative_optimal[0][N - 4] += d_total / M_total;
+					}
+					relative_d1 += (d_total / M_total);
+					max_d1 += max_d;
+					cout << "relative_d1: " << relative_d1 << endl;
+					cout << "the number of countries: " << N << " " << "relative_d1" << " " << inst << " " << relative_d1 / (inst + 1) << endl;
+					M_100 += M_total;
+					cout << "the number of countries: " << N << " " << "relative_d1" << " " << inst << " " << M_100 / (inst + 1);
+					cout << N << "countries" << " " << "instance_" << inst << "d1 done...";
+				}
+
+				// --------------------d1+c-------------------
+				if (d_c) {
+					c_involved = true;
+					period_0(Q, no_of_active_nodes, N, s, Vp, Vp_start, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit);
+					t0 = cpuTime();
+					min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp_start, periods, dispy, s, Q, v, target_omega, target, credit, edge_card_weight, t0, actual_alloc, v_impu, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_t_c, arbitray_maximum, v_S, S, d_c_total, convex_combined[2], quasibalanced_combined[2], coincidence_combined[2], inst, lex_min, cycle_dis_t_c_period, unique_combined[2], game_generation[2], solution_time[2], time[2], max_d, cycle_dis_arbitrary_period, average_d_period[2], track_not_optimal[1], track_time_limit[1], time_breakdown_per_inst[2]);
+					t1 = cpuTime();
+					total_time[2] += t1 - t0;
+					time_breakdown_per_inst[2][N - 4][inst * 4] = t1 - t0;
+					relative_d1_initial_allocation += (d_c_total / M_total);
+					max_d1_c += max_d;
+					c_involved = false;
+					M_100_d_c += M_total;
+					relative_d1_c += (d_total / M_total);
+					if (track_time_limit[1][N - 4][inst] != 9) {
+						relative_optimal[1][N - 4] += d_total / M_total;
+					}
+					cout << N << "countries" << " " << "instance_" << inst << "d1+c done...";
+				}
+				//-------------------lexmin--------------
+				if (lexmin_call) {
+					std::cout << N << "countries" << " " << "instance_" << inst << "lexmin starts";
+					lex_min = true;
+					period_0(Q, no_of_active_nodes, N, s, Vp, Vp_start, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit);
+					t0 = cpuTime();
+					min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp_start, periods, dispy, s, Q, v, target_omega, target, credit, edge_card_weight, t0, actual_alloc, v_impu, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_lexmin, arbitray_maximum, v_S, S, d_c_total, convex_combined[3], quasibalanced_combined[3], coincidence_combined[3], inst, lex_min, cycle_dis_lexmin_period, unique_combined[3], game_generation[3], solution_time[3], time[3], max_d, cycle_dis_arbitrary_period, average_d_period[3], track_not_optimal[2], track_time_limit[2], time_breakdown_per_inst[3]);
+					t1 = cpuTime();
+					total_time[3] += t1 - t0;
+					time_breakdown_per_inst[3][N - 4][inst * 4] = t1 - t0;
+					relative_lexmin_0 += (d_total / M_total);
+					if (track_time_limit[2][N - 4][inst] != 9) {
+						relative_optimal[2][N - 4] += d_total / M_total;
+					}
+					max_lexmin_0 += max_d;
+					lex_min = false;
+					M_lex_min += M_total;
+					std::cout << N << "countries" << " " << "instance_" << inst << "relative deviation" << d_total / M_total << "lexmin done...";
+				}
+				//-----------------lexmin+c----------------
+				if (lexmin_c_call) {
+					std::cout << N << "countries" << " " << "instance_" << inst << "lexmin+c starts...";
+					lex_min = true;
+					c_involved = true;
+					period_0(Q, no_of_active_nodes, N, s, Vp, Vp_start, node_arrives, active_nodes, active_nodes_original, c, c_b, c_original, credit);
+					t0 = cpuTime();
+					min_d_1(node_arrives, g, g_original, arc_pair, leaving, active_nodes, active_nodes_original, c, c_b, c_original, disp, no_of_active_nodes, N, Vp_start, periods, dispy, s, Q, v, target_omega, target, credit, edge_card_weight, t0, actual_alloc, v_impu, nodeset, cycle_distri, d, M_total, d_total, c_involved, cycle_dis_lexmin_c, arbitray_maximum, v_S, S, d_c_total, convex_combined[4], quasibalanced_combined[4], coincidence_combined[4], inst, lex_min, cycle_dis_lexmin_c_period, unique_combined[4], game_generation[4], solution_time[4], time[4], max_d, cycle_dis_arbitrary_period, average_d_period[4], track_not_optimal[3], track_time_limit[3], time_breakdown_per_inst[4]);
+					t1 = cpuTime();
+					total_time[4] += t1 - t0;
+					time_breakdown_per_inst[4][N - 4][inst * 4] = t1 - t0;
+					relative_lexmin_c_0+= (d_total / M_total);
+					if (track_time_limit[3][N - 4][inst] != 9) {
+						relative_optimal[3][N - 4] += d_total / M_total;
+					}
+					max_lexmin_c_0 += max_d;
+					lex_min = false;
+					c_involved = false;
+					M_lex_min_c += M_total;
+					std::cout << N << "countries" << " " << "instance_" << inst << "relative deviation" << d_total / M_total << "lexmin+c done...";
+				}
+
+			}
+			relative_d1_N[N - 4] = relative_d1 / 100;
+			relative_d1_N_c[N - 4] = relative_d1_c / 100;
+			relative_d1_N_initial_allocation[N - 4] = relative_d1_initial_allocation / 100;
+			relative_arbitrary_N[N - 4] = relative_d1_arbitrary / 100;
+			relative_lexmin[N - 4] = relative_lexmin_0 / 100;
+			relative_lexmin_c[N - 4] = relative_lexmin_c_0 / 100;
+			max_d1_N[N - 4] = max_d1 / 100;
+			max_d1_N_c[N - 4] = max_d1_c / 100;
+			max_arbitrary_N[N - 4] = max_d1_arbitrary / 100;
+			max_lexmin[N - 4] = max_lexmin_0 / 100;
+			max_lexmin_c[N - 4] = max_lexmin_c_0 / 100;
+			M_N[N - 4] = M_100 / 100;
+			M_N_d_c[N - 4] = M_100_d_c / 100;
+			M_N_d_arbitrary[N - 4] = M_100_d_arbitrary / 100;
+			M_N_lex_min[N - 4] = M_lex_min / 100;
+			M_N_lex_min_c[N - 4] = M_lex_min_c / 100;
+			data_preparation_N[N - 4] = data_preparation / 100;
+			graph_building_N[N - 4] = graph_building / 100;
+			game_generation_arbitrary_N[N - 4] = game_generation[0] / 100;
+			game_generation_d1_N[N - 4] = game_generation[1] / 100;
+			game_generation_d1_c_N[N - 4] = game_generation[2] / 100;
+			game_generation_lexmin_N[N - 4] = game_generation[3] / 100;
+			game_generation_lexmin_c_N[N - 4] = game_generation[4] / 100;
+			time_arbitrary_N[N - 4] = time[0] / 100;
+			time_d1_N[N - 4] = time[1] / 100;
+			time_d1_c_N[N - 4] = time[2] / 100;
+			time_lex_min_N[N - 4] = time[3] / 100;
+			time_lex_min_c_N[N - 4] = time[4] / 100;
+			total_time_arbitrary_N[N - 4] = total_time[0] / 100;
+			total_time_d1_N[N - 4] = total_time[1] / 100;
+			total_time_d1_c_N[N - 4] = total_time[2] / 100;
+			total_time_lex_min_N[N - 4] = total_time[3] / 100;
+			total_time_lex_min_c_N[N - 4] = total_time[4] / 100;
+			solution_concept_time_arbitrary_N[N - 4] = solution_time[0] / 100;
+			solution_concept_time_d1_N[N - 4] = solution_time[1] / 100;
+			solution_concept_time_d1_c_N[N - 4] = solution_time[2] / 100;
+			solution_concept_time_lexmin_N[N - 4] = solution_time[3] / 100;
+			solution_concept_time_lexmin_c_N[N - 4] = solution_time[4] / 100;
+			for (int i = 0; i < 5; i++) {
+				unique_imputation[i][N - 4] = unique_combined[i];
+				num_of_convex[i][N - 4] = (double)convex_combined[i] / 2400;
+				coincidence[i][N - 4] = (double)coincidence_combined[i] / (2400 - convex_combined[i]);
+				quasiblanced[i][N - 4] = (double)quasibalanced_combined[i] / 2400;
+			}
+			//cout << "number of convex games: " << convex_combined[1] << endl;
+			/*for (int i = 0; i < N - 3; i++) {
+				for (int j = 0; j < 24; j++) {
+					cout << "round j:" << (double)average_d_period[1][i][j] / 100 << endl;
+				}
+			}*/
+			ofstream res;
+			res.open(version + "/" + country_size + "/" + solution_concept + "inequal_tau_value_results_" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
+			for (unsigned short int i = 0; i < N - 3; i++) {
+				res << i + 4 << "countries" << endl;
+				if (d1) {
+					res << "data preparation: " << data_preparation_N[i] << endl;
+					res << "build graph: " << graph_building_N[i] << endl;
+					res << "minimizing d_1: " << relative_d1_N[i] << endl;
+					res << "minimizing max_d_1: " << max_d1_N[i] << endl;
+					res << "average number of transplants: " << M_N[i] << endl;
+					res << "total time: " << total_time_d1_N[i] << endl;
+					res << "scenario time: " << time_d1_N[i] << endl;
+					res << "game generation: " << game_generation_d1_N[i] << endl;
+					res << "solution concept: " << solution_concept_time_d1_N[i] << endl;
+					res << "#unique imputation: " << unique_imputation[1][i] << endl;
+					res << "convex rate: " << num_of_convex[1][i] << endl;
+					res << "quasibalanced rate: " << quasiblanced[1][i] << endl;
+					res << "coincidence rate: " << coincidence[1][i] << endl;
+					res << "----------accumulated deviations-------------" << endl;
+					for (int j = 0; j < 24; j++) {
+						res << "round j:" << (double)average_d_period[1][i][j] / 100 << endl;
+					}
+
+					res << "------------not optimal------------------" << endl;
+					int temp = 0;
+					for (int k = 0; k < 100; k++) {
+						if (track_not_optimal[0][i][k] != 0 && track_not_optimal[0][i][k] != 2) {
+							temp++;
+						}
+					}
+					res << "#not optimal:" << temp << endl;
+					res << "---------" << i + 4 << " countries" << "---------" << endl;
+					int track_temp = 0;
+					for (int l : track_not_optimal[0][i]) {
+						res << "inst: " << track_temp << ", " << l << endl;
+						track_temp++;
+					}
+
+					res << "------------reach time limit------------------" << endl;
+					int temp_0 = 0;
+					for (int k = 0; k < 100; k++) {
+						if (track_time_limit[0][i][k] != 0 && track_time_limit[0][i][k] != 2) {
+							temp_0++;
+						}
+					}
+					res << "#time limit:" << temp_0 << endl;
+					res << "relative optimal ratio: " << (double)relative_optimal[0][i] / (100 - temp_0) << endl;
+					res << "---------" << i + 4 << " countries" << "---------" << endl;
+					int track_temp_0 = 0;
+					for (int l : track_time_limit[0][i]) {
+						res << "inst: " << track_temp_0 << ", " << l << endl;
+						track_temp_0++;
+					}
+				}
+				if (d_c) {
+					res << "minimizing d_1_c: " << relative_d1_N_c[i] << endl;
+					res << "minimizing d_1_c_initial_allocation: " << relative_d1_N_initial_allocation[i] << endl;
+					res << "minimizing max_d_1_c: " << max_d1_N_c[i] << endl;
+					res << "average number of transplants_c: " << M_N_d_c[i] << endl;
+					res << "total time: " << total_time_d1_c_N[i] << endl;
+					res << "scenario time: " << time_d1_c_N[i] << endl;
+					res << "game generation: " << game_generation_d1_c_N[i] << endl;
+					res << "solution concept: " << solution_concept_time_d1_c_N[i] << endl;
+					res << "#unique imputation: " << unique_imputation[2][i] << endl;
+					res << "convex rate: " << num_of_convex[2][i] << endl;
+					res << "quasibalanced rate: " << quasiblanced[2][i] << endl;
+					res << "coincidence rate: " << coincidence[2][i] << endl;
+					res << "----------accumulated deviations-------------" << endl;
+					for (int j = 0; j < 24; j++) {
+						res << "round j:" << (double)average_d_period[2][i][j] / 100 << endl;
+					}
+
+					res << "------------not optimal------------------" << endl;
+					int temp = 0;
+					for (int k = 0; k < 100; k++) {
+						if (track_not_optimal[1][i][k] != 0 && track_not_optimal[1][i][k] != 2) {
+							temp++;
+						}
+					}
+					res << "#not optimal:" << temp << endl;
+					res << "---------" << i + 4 << " countries" << "---------" << endl;
+					int track_temp = 0;
+					for (int l : track_not_optimal[1][i]) {
+						res << "inst: " << track_temp << ", " << l << endl;
+						track_temp++;
+					}
+
+					res << "------------reach time limit------------------" << endl;
+					int temp_0 = 0;
+					for (int k = 0; k < 100; k++) {
+						if (track_time_limit[1][i][k] != 0 && track_time_limit[1][i][k] != 2) {
+							temp_0++;
+						}
+					}
+					res << "#time limit:" << temp_0 << endl;
+					res << "relative optimal ratio: " << (double)relative_optimal[1][i] / (100 - temp_0) << endl;
+					res << "---------" << i + 4 << " countries" << "---------" << endl;
+					int track_temp_0 = 0;
+					for (int l : track_time_limit[1][i]) {
+						res << "inst: " << track_temp_0 << ", " << l << endl;
+						track_temp_0++;
+					}
+				}
+				if (lexmin_call) {
+					res << "lex min " << relative_lexmin[i] << endl;
+					res << "lex min max d " << max_lexmin[i] << endl;
+					res << "average number of transplants: " << M_N_lex_min[i] << endl;
+					res << "total time: " << total_time_lex_min_N[i] << endl;
+					res << "scenario time: " << time_lex_min_N[i] << endl;
+					res << "game generation: " << game_generation_lexmin_N[i] << endl;
+					res << "solution concept: " << solution_concept_time_lexmin_N[i] << endl;
+					res << "#unique imputation: " << unique_imputation[3][i] << endl;
+					res << "convex rate: " << num_of_convex[3][i] << endl;
+					res << "quasibalanced rate: " << quasiblanced[3][i] << endl;
+					res << "coincidence rate: " << coincidence[3][i] << endl;
+					res << "----------accumulated deviations-------------" << endl;
+					for (int j = 0; j < 24; j++) {
+						res << "round j:" << (double)average_d_period[3][i][j] / 100 << endl;
+					}
+
+					res << "------------not optimal------------------" << endl;
+					int temp = 0;
+					for (int k = 0; k < 100; k++) {
+						if (track_not_optimal[2][i][k] != 0 && track_not_optimal[2][i][k] != 2) {
+							temp++;
+						}
+					}
+					res << "#not optimal:" << temp << endl;
+					res << "---------" << i + 4 << " countries" << "---------" << endl;
+					int track_temp = 0;
+					for (int l : track_not_optimal[2][i]) {
+						res << "inst: " << track_temp << ", " << l << endl;
+						track_temp++;
+					}
+
+					res << "------------reach time limit------------------" << endl;
+					int temp_0 = 0;
+					for (int k = 0; k < 100; k++) {
+						if (track_time_limit[2][i][k] != 0 && track_time_limit[2][i][k] != 2) {
+							temp_0++;
+						}
+					}
+					res << "#time limit:" << temp_0 << endl;
+					res << "relative optimal ratio: " << (double)relative_optimal[2][i] / (100 - temp_0) << endl;
+					res << "---------" << i + 4 << " countries" << "---------" << endl;
+					int track_temp_0 = 0;
+					for (int l : track_time_limit[2][i]) {
+						res << "inst: " << track_temp_0 << ", " << l << endl;
+						track_temp_0++;
+					}
+				}
+				if (arbitrary) {
+					res << "minimizing d_1_arbitrary: " << relative_arbitrary_N[i] << endl;
+					res << "minimizing max_d_1_arbitrary: " << max_arbitrary_N[i] << endl;
+					res << "average number of transplants_arbitrary: " << M_N_d_arbitrary[i] << endl;
+					res << "total time: " << total_time_arbitrary_N[i] << endl;
+					res << "scenario time: " << time_arbitrary_N[i] << endl;
+					res << "game generation: " << game_generation_arbitrary_N[i] << endl;
+					res << "solution concept: " << solution_concept_time_arbitrary_N[i] << endl;
+					res << "#unique imputation: " << unique_imputation[0][i] << endl;
+					res << "convex rate: " << num_of_convex[0][i] << endl;
+					res << "quasibalanced rate: " << quasiblanced[0][i] << endl;
+					res << "coincidence rate: " << coincidence[0][i] << endl;
+					res << "----------accumulated deviations-------------" << endl;
+					for (int j = 0; j < 24; j++) {
+						res << "round j:" << (double)average_d_period[0][i][j] / 100 << endl;
+					}
+				}
+				if (lexmin_c_call) {
+					res << "lex min+c " << relative_lexmin_c[i] << endl;
+					res << "lex min+c max " << max_lexmin_c[i] << endl;
+					res << "average number of transplants: " << M_N_lex_min_c[i] << endl;
+					res << "total time: " << total_time_lex_min_c_N[i] << endl;
+					res << "scenario time: " << time_lex_min_c_N[i] << endl;
+					res << "game generation: " << game_generation_lexmin_c_N[i] << endl;
+					res << "solution concept: " << solution_concept_time_lexmin_c_N[i] << endl;
+					res << "#unique imputation: " << unique_imputation[4][i] << endl;
+					res << "convex rate: " << num_of_convex[4][i] << endl;
+					res << "quasibalanced rate: " << quasiblanced[4][i] << endl;
+					res << "coincidence rate: " << coincidence[4][i] << endl;
+					res << "----------accumulated deviations-------------" << endl;
+					for (int j = 0; j < 24; j++) {
+						res << "round j:" << (double)average_d_period[4][i][j] / 100 << endl;
+					}
+
+					res << "------------not optimal------------------" << endl;
+					int temp = 0;
+					for (int k = 0; k < 100; k++) {
+						if (track_not_optimal[3][i][k] != 0 && track_not_optimal[3][i][k] != 2) {
+							temp++;
+						}
+					}
+					res << "#not optimal:" << temp << endl;
+					res << "---------" << i + 4 << " countries" << "---------" << endl;
+					int track_temp = 0;
+					for (int l : track_not_optimal[3][i]) {
+						res << "inst: " << track_temp << ", " << l << endl;
+						track_temp++;
+					}
+
+					res << "------------reach time limit------------------" << endl;
+					int temp_0 = 0;
+					for (int k = 0; k < 100; k++) {
+						if (track_time_limit[3][i][k] != 0 && track_time_limit[3][i][k] != 2) {
+							temp_0++;
+						}
+					}
+					res << "#time limit:" << temp_0 << endl;
+					res << "relative optimal ratio: " << (double)relative_optimal[3][i] / (100 - temp_0) << endl;
+					res << "---------" << i + 4 << " countries" << "---------" << endl;
+					int track_temp_0 = 0;
+					for (int l : track_time_limit[3][i]) {
+						res << "inst: " << track_temp_0 << ", " << l << endl;
+						track_temp_0++;
+					}
+					res << endl;
+				}
+
+			}
+
+			res.close();
+
+			// time breakdown per instance
+			ofstream res_time;
+			res_time.open(version + "/" + country_size + "/" + "time_breakdown_" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
+			for (unsigned short int i = 0; i < N - 3; i++) {
+				res_time << "number of countries: " << i + 4 << endl;
+				if (d1) {
+					for (int j = 0; j < 100; j++) {
+						res_time << "---inst " << j << "---" << endl;
+						res_time << "total time: " << time_breakdown_per_inst[1][i][4 * j] << endl;
+						res_time << "data preparation: " << time_prep[i][j] << endl;
+						res_time << "graph building: " << time_graph[i][j] << endl;
+						res_time << "solution concept: " << time_breakdown_per_inst[1][i][4 * j + 1] << endl;
+						res_time << "game generation: " << time_breakdown_per_inst[1][i][4 * j + 2] << endl;
+						res_time << "scenario: " << time_breakdown_per_inst[1][i][4 * j + 3] << endl;
+					}
+				}
+				if (d_c) {
+					for (int j = 0; j < 100; j++) {
+						res_time << "---inst " << j << "---" << endl;
+						res_time << "total time: " << time_breakdown_per_inst[2][i][4 * j] << endl;
+						res_time << "data preparation: " << time_prep[i][j] << endl;
+						res_time << "graph building: " << time_graph[i][j] << endl;
+						res_time << "solution concept: " << time_breakdown_per_inst[2][i][4 * j + 1] << endl;
+						res_time << "game generation: " << time_breakdown_per_inst[2][i][4 * j + 2] << endl;
+						res_time << "scenario: " << time_breakdown_per_inst[2][i][4 * j + 3] << endl;
+					}
+				}
+				if (lexmin_call) {
+					for (int j = 0; j < 100; j++) {
+						res_time << "---inst " << j << "---" << endl;
+						res_time << "total time: " << time_breakdown_per_inst[3][i][4 * j] << endl;
+						res_time << "data preparation: " << time_prep[i][j] << endl;
+						res_time << "graph building: " << time_graph[i][j] << endl;
+						res_time << "solution concept: " << time_breakdown_per_inst[3][i][4 * j + 1] << endl;
+						res_time << "game generation: " << time_breakdown_per_inst[3][i][4 * j + 2] << endl;
+						res_time << "scenario: " << time_breakdown_per_inst[3][i][4 * j + 3] << endl;
+					}
+				}
+				if (lexmin_c_call) {
+					for (int j = 0; j < 100; j++) {
+						res_time << "---inst " << j << "---" << endl;
+						res_time << "total time: " << time_breakdown_per_inst[4][i][4 * j] << endl;
+						res_time << "data preparation: " << time_prep[i][j] << endl;
+						res_time << "graph building: " << time_graph[i][j] << endl;
+						res_time << "solution concept: " << time_breakdown_per_inst[4][i][4 * j + 1] << endl;
+						res_time << "game generation: " << time_breakdown_per_inst[4][i][4 * j + 2] << endl;
+						res_time << "scenario: " << time_breakdown_per_inst[4][i][4 * j + 3] << endl;
+					}
+				}
+				if (arbitrary) {
+					for (int j = 0; j < 100; j++) {
+						res_time << "---inst " << j << "---" << endl;
+						res_time << "total time: " << time_breakdown_per_inst[0][i][4 * j] << endl;
+						res_time << "data preparation: " << time_prep[i][j] << endl;
+						res_time << "graph building: " << time_graph[i][j] << endl;
+						res_time << "solution concept: " << time_breakdown_per_inst[0][i][4 * j + 1] << endl;
+						res_time << "game generation: " << time_breakdown_per_inst[0][i][4 * j + 2] << endl;
+						res_time << "scenario: " << time_breakdown_per_inst[0][i][4 * j + 3] << endl;
+					}
+				}
+
+			}
+			res_time.close();
+
+			// cycle distributions
+			vector<long> check(5, 0);
+			if (d1) {
+				ofstream res_dis;
+				res_dis.open(version + "/" + country_size + "/" + solution_concept + "cycle_dis_d" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
+				for (const auto& elem : cycle_dis_d) {
+					res_dis << elem.first << ": " << elem.second << endl;
+					check[0] += elem.first * elem.second;
+				}
+				res_dis << endl;
+				res_dis.close();
+			}
+
+
+			if (d_c) {
+				ofstream res_dis_c;
+				res_dis_c.open(version + "/" + country_size + "/" + solution_concept + "cycle_dis_c" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
+				for (const auto& elem : cycle_dis_t_c) {
+					res_dis_c << elem.first << ": " << elem.second << endl;
+					check[1] += elem.first * elem.second;
+				}
+				res_dis_c << endl;
+				res_dis_c.close();
+			}
+
+			if (arbitrary) {
+				ofstream res_dis_arbitrary;
+				res_dis_arbitrary.open(version + "/" + country_size + "/" + solution_concept + "cycle_dis_arbitrary" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
+				for (const auto& elem : cycle_dis_arbitrary) {
+					res_dis_arbitrary << elem.first << ": " << elem.second << endl;
+					check[2] += elem.first * elem.second;
+				}
+				res_dis_arbitrary << endl;
+				res_dis_arbitrary.close();
+			}
+
+			if (lexmin_call) {
+				ofstream res_dis_lexmin;
+				res_dis_lexmin.open(version + "/" + country_size + "/" + solution_concept + "cycle_dis_lexmin" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
+				for (const auto& elem : cycle_dis_lexmin) {
+					res_dis_lexmin << elem.first << ": " << elem.second << endl;
+					check[3] += elem.first * elem.second;
+				}
+				res_dis_lexmin << endl;
+				res_dis_lexmin.close();
+			}
+
+			if (lexmin_c_call) {
+				ofstream res_dis_lexmin_c;
+				res_dis_lexmin_c.open(version + "/" + country_size + "/" + solution_concept + "cycle_dis_lexmin_c" + to_string(N) + ".txt", ofstream::out | ofstream::trunc);
+				for (const auto& elem : cycle_dis_lexmin_c) {
+					res_dis_lexmin_c << elem.first << ": " << elem.second << endl;
+					check[4] += elem.first * elem.second;
+				}
+				res_dis_lexmin_c << endl;
+				res_dis_lexmin_c.close();
+			}
+
+
+			// cycle distributions seperating by periods
+			vector<long> value(5, 0);
+
+			if (d1) {
+				ofstream res_cycle_dis_d_period;
+				for (unsigned short int i = 0; i < 24; ++i) {
+					res_cycle_dis_d_period.open(version + "/" + country_size + "/" + solution_concept + "cycle_dis_d_period" + to_string(N) + "_" + to_string(i) + ".txt", ofstream::out | ofstream::trunc);
+					for (const auto& elem : cycle_dis_d_period[(N - 4) * 24 + i]) {
+						value[0] += elem.first * elem.second;
+						res_cycle_dis_d_period << elem.first << ": " << elem.second << endl;
+					}
+					res_cycle_dis_d_period << endl;
+					res_cycle_dis_d_period.close();
+				}
+				res_cycle_dis_d_period.close();
+			}
+
+			if (d_c) {
+				ofstream res_cycle_dis_c_period;
+				for (unsigned short int i = 0; i < 24; ++i) {
+					res_cycle_dis_c_period.open(version + "/" + country_size + "/" + solution_concept + "cycle_dis_d_c_period" + to_string(N) + "_" + to_string(i) + ".txt", ofstream::out | ofstream::trunc);
+					for (const auto& elem : cycle_dis_t_c_period[(N - 4) * 24 + i]) {
+						value[1] += elem.first * elem.second;
+						res_cycle_dis_c_period << elem.first << ": " << elem.second << endl;
+					}
+					res_cycle_dis_c_period << endl;
+					res_cycle_dis_c_period.close();
+				}
+				res_cycle_dis_c_period.close();
+			}
+
+			if (arbitrary) {
+				ofstream res_cycle_dis_arbitrary_period;
+				for (unsigned short int i = 0; i < 24; ++i) {
+					res_cycle_dis_arbitrary_period.open(version + "/" + country_size + "/" + solution_concept + "cycle_dis_arbitrary_period" + to_string(N) + "_" + to_string(i) + ".txt", ofstream::out | ofstream::trunc);
+					for (const auto& elem : cycle_dis_arbitrary_period[(N - 4) * 24 + i]) {
+						value[2] += elem.first * elem.second;
+						res_cycle_dis_arbitrary_period << elem.first << ": " << elem.second << endl;
+					}
+					res_cycle_dis_arbitrary_period << endl;
+					res_cycle_dis_arbitrary_period.close();
+				}
+				res_cycle_dis_arbitrary_period.close();
+			}
+
+			if (lexmin_call) {
+				ofstream res_dis_lexmin_period;
+				for (unsigned short int i = 0; i < 24; ++i) {
+					res_dis_lexmin_period.open(version + "/" + country_size + "/" + solution_concept + "cycle_dis_lexmin_period" + to_string(N) + "_" + to_string(i) + ".txt", ofstream::out | ofstream::trunc);
+					for (const auto& elem : cycle_dis_lexmin_period[(N - 4) * 24 + i]) {
+						value[3] += elem.first * elem.second;
+						res_dis_lexmin_period << elem.first << ": " << elem.second << endl;
+					}
+					res_dis_lexmin_period << endl;
+					res_dis_lexmin_period.close();
+				}
+				res_dis_lexmin_period.close();
+			}
+
+			if (lexmin_c_call) {
+				ofstream res_cycle_dis_lexmin_c_period;
+				for (unsigned short int i = 0; i < 24; ++i) {
+					res_cycle_dis_lexmin_c_period.open(version + "/" + country_size + "/" + solution_concept + "cycle_dis_lexmin_c_period" + to_string(N) + "_" + to_string(i) + ".txt", ofstream::out | ofstream::trunc);
+					for (const auto& elem : cycle_dis_lexmin_c_period[(N - 4) * 24 + i]) {
+						value[4] += elem.first * elem.second;
+						res_cycle_dis_lexmin_c_period << elem.first << ": " << elem.second << endl;
+					}
+					res_cycle_dis_lexmin_c_period << endl;
+					res_cycle_dis_lexmin_c_period.close();
+				}
+				res_cycle_dis_lexmin_c_period.close();
+			}
+
+			for (unsigned short int i = 0; i < 5; ++i) {
+				cout << "scenario: " << i << " " << value[i] << " " << check[i] << endl;
+				if (value[i] != check[i]) {
+					cout << "scenario: " << i << " " << value[i] << " " << check[i] << endl;
+					cout << "Error in the number of transplants" << endl;
+				}
+			}
+		}
+		cout << "simulations are done" << endl;
+
+
+	}
+	catch (GRBException e) {
+		cout << "Error code = " << e.getErrorCode() << endl;
+		cout << e.getMessage() << endl;
+	}
+	catch (...) {
+		cout << "Exception during optimization" << endl;
+	}
+	return 0;
+}
+
+
+double core_dist(vector<double>& x, vector<double>& v_impu, vector<double>& v_S, unsigned short int& N, unsigned int& S) {
+	double eps = x[0] - v_impu[0];
+	if (x[1] - v_impu[1] < eps)
+		eps = x[1] - v_impu[1];
+	vector<bool> a(N, false);
+	double xS = 0;
+	for (unsigned int i = 2; i < S; i++) {
+		de2bi(i, a, N);
+		for (unsigned short int j = 0; j < N; j++) {
+			if (a[j]) {
+				xS += x[j];
+			}
+
+		}
+		if (xS - v_S[i] < eps)
+			eps = xS - v_S[i];
+		xS = 0;
+	}
+	return eps;
+}
+
+void de2bi(unsigned int& k, vector<bool>& a, unsigned short int& N) {
+	vector<bool> zero(N, false);
+	a = zero;
+	unsigned int i = 2;
+	for (unsigned short int c = 0; c < N - 2; c++)
+		i += i;
+	unsigned int j = k + 1;
+	unsigned short int l = N - 1;
+	while (j > 0) {
+		if (j >= i) {
+			a[l] = true;
+			j -= i;
+		}
+		i /= 2;
+		l--;
+	}
+}
+
+
+
+
+void coop_game(ListGraph& g, vector<double>& v, vector<double>& v_impu, vector<double>& v_S, unsigned int& S, vector<unsigned short int>& s, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, ListGraph::EdgeMap<double>& edge_card_weight, bool& dispy, vector<unsigned short int>& Vp_start, unsigned short int& N, ListGraph::NodeMap<bool>& active_nodes, vector<bool>& leaving, unsigned short int& Q, bool& arbitray_maximum, vector<pair<int, int>>& cycle_distri, map<int, int>& cycle_dis, double& game_generation, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period, vector<vector<double>>& time_breakdown, unsigned short int inst) {
+	vector<bool> a(N, false);
+	double t0 = cpuTime();
+	for (unsigned int i = 0; i < N; i++) {
+		ListGraph::NodeMap<bool> coal1(g, false);
+		//ListDigraph::NodeMap<bool> coal1_original(g_original, false);
+		for (unsigned short int k = Vp_start[i]; k < Vp_start[i + 1]; k++) {
+			if (active_nodes[c[k]]) {
+				coal1[c[k]] = true;
+				coal1[c_b[k]] = true;
+				//coal1_original[c_original[k]] = true;
+			}
+		}
+
+		//MaxMatching<FilterNodes<ListGraph>> coal_m1(FilterNodes<ListGraph>(g, coal1));
+		//FilterNodes<ListGraph> coal_m1(g, coal1);
+		//std::cout<<"my type is..."<<typeid(coal_m1).name() << endl;
+		MaxWeightedPerfectMatching<FilterNodes<ListGraph>, ListGraph::EdgeMap<double>> coal_m1(FilterNodes<ListGraph>(g, coal1), edge_card_weight);
+		coal_m1.run();
+		v_impu[i] = coal_m1.matchingWeight();
+		cout << "finish generating v_impu" << endl;
+		ListGraph::NodeMap<bool> coal2(g, false);
+		for (unsigned int j = 0; j < N; j++) {
+			if (i != j) {
+				for (unsigned short int k = Vp_start[j]; k < Vp_start[j + 1]; k++) {
+					if (active_nodes[c[k]]) {
+						coal2[c[k]] = true;
+						coal2[c_b[k]] = true;
+					}
+				}
+			}
+		}
+		//MaxWeightedPerfectMatching<FilterNodes<ListGraph>> coal_m2(g, coal2);
+		MaxWeightedPerfectMatching<FilterNodes<ListGraph>, ListGraph::EdgeMap<double>> coal_m2(FilterNodes<ListGraph>(g, coal2), edge_card_weight);
+		coal_m2.run();
+		v[i] = coal_m2.matchingWeight();
+		cout << "finish generating v_i" << endl;
+	}
+
+	for (unsigned int i = 0; i < S + 1; i++) {
+		de2bi(i, a, N);
+		ListGraph::NodeMap<bool> coal3(g, false);
+		for (unsigned short int j = 0; j < N; j++) {
+			if (a[j]) {
+				for (unsigned short int k = Vp_start[j]; k < Vp_start[j + 1]; ++k) {
+					if (active_nodes[c[k]]) {
+						coal3[c[k]] = true;
+						coal3[c_b[k]] = true;
+					}
+				}
+			}
+
+		}
+		MaxWeightedPerfectMatching<FilterNodes<ListGraph>, ListGraph::EdgeMap<double>> coal_m1(FilterNodes<ListGraph>(g, coal3), edge_card_weight);
+		coal_m1.run();
+		v_S[i] = coal_m1.matchingWeight();
+	}
+
+
+	cout << "finish generating the copy" << endl;
+	FilterNodes<ListGraph> sg(g, active_nodes);
+	MaxWeightedPerfectMatching<FilterNodes<ListGraph>, ListGraph::EdgeMap<double>> grand_coal(FilterNodes<ListGraph>(g, active_nodes), edge_card_weight);
+	grand_coal.run();
+	v[N] = grand_coal.matchingWeight();
+	double t1 = cpuTime();
+	game_generation += t1 - t0;
+	time_breakdown[N - 4][inst * 4 + 2] += t1 - t0;
+	grand_coal.matchingMap();
+
+	if (arbitray_maximum) {
+		unsigned short int a = 0;
+		unsigned short int b = 0;
+		for (FilterNodes<ListGraph>::NodeIt n(FilterNodes<ListGraph>(g, active_nodes)); n != INVALID; ++n) {
+			//cout << sg.id(n) << endl;
+			if (!(grand_coal.matching(n) == INVALID) && edge_card_weight[grand_coal.matching(n)] > 0 && FilterNodes<ListGraph>(g, active_nodes).id(n) % 2 == 0) {
+				cycle_distri.push_back({ FilterNodes<ListGraph>(g, active_nodes).id(n) / 2, (FilterNodes<ListGraph>(g, active_nodes).id(grand_coal.mate(n)) - 1) / 2 });
+				leaving[FilterNodes<ListGraph>(g, active_nodes).id(n) / 2] = true;
+				for (unsigned short int i = 0; i < N; ++i) {
+					if (Vp_start[i] <= FilterNodes<ListGraph>(g, active_nodes).id(n) / 2 && FilterNodes<ListGraph>(g, active_nodes).id(n) / 2 < Vp_start[i + 1]) {
+						++s[i];
+					}
+				}
+
+			}
+			//cycle_distri.push_back(arc_pair[i - 1]);
+		}
+
+		cycle_distribution(cycle_dis_arbitrary_period, cycle_dis, cycle_distri, N, Q);
+
+	}
+
+
+	if (dispy)
+		cout << "grand coal: " << v[N] << endl;
+
+	if (dispy) {
+		cout << "s: ";
+		for (unsigned short int i = 0; i < N; i++) {
+			cout << s[i] << " ";
+		}
+		cout << endl;
+	}
+	return;
+}
+
+void min_d_1(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph& g_original, vector<pair<int, int>>& arc_pair, vector<bool>& leaving, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, bool& disp, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, vector<unsigned short int>& Vp_start, unsigned short int& periods, bool& dispy, vector<unsigned short int>& s, unsigned short int& Q, vector<double>& v, bool& target_omega, vector<double>& target, vector<double>& credit, ListGraph::EdgeMap<double>& edge_card_weight, double& t0, vector<vector<unsigned short int>>& actual_alloc, vector<double>& v_impu, vector<int>& nodeset, vector<pair<int, int>>& cycle_distri, vector<double>& d, double& M_total, double& d_total, bool& c_involved, map<int, int>& cycle_dis, bool& arbitray_maximum, vector<double>& v_S, unsigned int& S, double& d_c_total, int& convex, int& quasibalanced, int& coincidence, unsigned short int inst, bool& lex_min, std::map<int, std::map<int, int>>& cycle_dis_period, int& unique, double& game_generation, double& solution_time, double& scenario_time, double& max_d, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period, vector<vector<double>>& average_d_period, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit, vector<vector<double>>& time_breakdown) {
+	Q = 0;
+	d_total = 0;
+	d_c_total = 0;
+	M_total = 0;
+	max_d = 0;
+	if (dispy)
+		cout << " --== Without lex min matching == -- " << endl;
+	for (unsigned short int i = 0; i < N; i++) {
+		d[i] = 0;
+		s[i] = 0;
+		credit[i] = 0;
+		no_of_active_nodes[i] = (Vp_start[i + 1] - Vp_start[i]) / 4;
+		for (unsigned short int j = Vp_start[i]; j < Vp_start[i + 1]; j++) {
+			if (node_arrives[j] == 0) {
+				active_nodes[c[j]] = true;
+				active_nodes[c_b[j]] = true;
+				active_nodes_original[c_original[j]] = true;
+			}
+			else {
+				active_nodes[c[j]] = false;
+				active_nodes[c_b[j]] = false;
+				active_nodes_original[c_original[j]] = false;
+			}
+		}
+	}
+	while (Q < periods) {
+		if (dispy) {
+			cout << "--== PERIOD " << Q + 1 << " ==--" << endl;
+		}
+		if (dispy) {
+			cout << "Number of active nodes: ";
+			for (unsigned short int i = 0; i < N; i++)
+				cout << no_of_active_nodes[i] << " ";
+			cout << endl;
+		}
+		// cooperative game and target
+		cout << "start generating values" << endl;
+		coop_game(g, v, v_impu, v_S, S, s, c, c_b, edge_card_weight, dispy, Vp_start, N, active_nodes, leaving, Q, arbitray_maximum, cycle_distri, cycle_dis, game_generation, cycle_dis_arbitrary_period, time_breakdown, inst);
+		double suma = 0;
+		double sumimpu = 0;
+		vector<double> benefit(N, 0);
+		double prec = pow(10, -7);
+		double t0 = cpuTime();
+		if (target_omega) {
+			for (unsigned short int i = 0; i < N; i++) {
+				suma += v[N] - v[i] - v_impu[i];
+				sumimpu += v_impu[i];
+			}
+			if (abs(suma) < prec) {
+				unique++;
+			}
+			for (unsigned short int i = 0; i < N; i++)
+				benefit[i] = v_impu[i] + (v[N] - sumimpu) * ((v[N] - v[i] - v_impu[i]) / suma);
+		}
+		else {
+			for (unsigned short int i = 0; i < N; i++) {
+				suma += v[N] - v[i];
+				sumimpu += v_impu[i];
+			}
+			for (unsigned short int i = 0; i < N; i++)
+				target[i] = v_impu[i] + (v[N] - sumimpu) * ((v[N] - v[i]) / suma);
+		}
+		for (unsigned short int i = 0; i < N; ++i) {
+			//cout << "benefit: " << benefit[i] << endl;
+		}
+		bool quasibal = false;
+		double temp = 0;
+		temp = tau(benefit, N, S, prec, disp, target, quasibal, v_S);
+		double t1 = cpuTime();
+		solution_time += t1 - t0;
+		time_breakdown[N - 4][inst * 4 + 1] += t1 - t0;
+		for (unsigned short int i = 0; i < N; ++i) {
+			//cout << "target value: " << target[i] << endl;
+			target[i] = benefit[i];
+			//cout << "tau value: "<<target[i] << endl;
+		}
+		if (quasibal) {
+			++quasibalanced;
+		}
+		if (abs(temp) < prec) {
+			++coincidence;
+		}
+		if (convex_game(N, S, v_S, prec)) {
+			++convex;
+		}
+
+
+
+		//init_alloc[Q] = target;
+		if (dispy) {
+			if (target_omega) {
+				cout << "Benefit: ";
+			}
+			else {
+				cout << "Contribution: ";
+			}
+			for (unsigned short int i = 0; i < N; i++) {
+				cout << target[i] << " ";
+			}
+			cout << endl;
+		}
+		double t2 = cpuTime();
+		ILP_d1_gurobi(Q, N, g_original, Vp_start, node_arrives, active_nodes, active_nodes_original, arc_pair, nodeset, actual_alloc, v[N], M_total, s, cycle_distri, target, leaving, d, d_total, c_involved, credit, cycle_dis, target, lex_min, inst, cycle_dis_period, average_d_period, track_not_optimal, track_time_limit);
+		double t3 = cpuTime();
+		scenario_time += t3 - t2;
+		time_breakdown[N - 4][inst * 4 + 3] += t3 - t2;
+		Q++;
+		changing_nodes(active_nodes, active_nodes_original, leaving, no_of_active_nodes, N, Vp_start, node_arrives, Q, c, c_b, c_original, s, d, target);
+		if (dispy)
+			cin.get();
+	}
+	for (unsigned short int i = 0; i < N; ++i) {
+		d_total += abs(d[i]);
+		if (c_involved) {
+			d_c_total += abs(credit[i]);
+		}
+	}
+	vector<double> max_deviation(N, 0);
+	for (unsigned short int i = 0; i < N; ++i) {
+		max_deviation[i] = abs(d[i]) / M_total;
+	}
+	std::sort(max_deviation.begin(), max_deviation.end());
+	max_d = max_deviation[N - 1];
+}
+
+void changing_nodes(ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<bool>& leaving, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, vector<unsigned short int>& Vp_start, vector<unsigned short int>& node_arrives, unsigned short int& Q, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, vector<unsigned short int>& s, vector<double>& d, vector<double>& target) {
+	for (unsigned short int i = 0; i < N; i++) {
+		s[i] = 0;
+		target[i] = 0;
+		for (unsigned short int j = Vp_start[i]; j < Vp_start[i + 1]; j++) {
+			if (leaving[j]) {
+				active_nodes[c[j]] = false;
+				active_nodes[c_b[j]] = false;
+				active_nodes_original[c_original[j]] = false;
+				no_of_active_nodes[i]--;
+				leaving[j] = false;
+			}
+			else {
+				if (active_nodes[c[j]] && node_arrives[j] == Q - 4) {
+					active_nodes[c[j]] = false;
+					active_nodes[c_b[j]] = false;
+					active_nodes_original[c_original[j]] = false;
+					no_of_active_nodes[i]--;
+				}
+			}
+			if (node_arrives[j] == Q) {
+				active_nodes[c[j]] = true;
+				active_nodes[c_b[j]] = true;
+				active_nodes_original[c_original[j]] = true;
+				no_of_active_nodes[i]++;
+			}
+		}
+	}
+	return;
+}
+
+void initial_pairs(vector<unsigned short int>& Vp_start, unsigned short int& N, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original) {
+	unsigned short int coal = rand() % (Vp_start[1] - Vp_start[0]);
+	unsigned short int count = 0;
+	for (unsigned short int i = 0; i < N; i++) {
+		while (count < (Vp_start[i + 1] - Vp_start[i]) / 4) {
+			if (active_nodes[c[Vp_start[i] + coal]]) {
+				coal = rand() % (Vp_start[i + 1] - Vp_start[i]);
+			}
+			else {
+				active_nodes[c[Vp_start[i] + coal]] = true;
+				active_nodes[c_b[Vp_start[i] + coal]] = true;
+				active_nodes_original[c_original[Vp_start[i] + coal]] = true;
+				count++;
+				coal = rand() % (Vp_start[i + 1] - Vp_start[i]);
+			}
+		}
+		count = 0;
+	}
+	return;
+}
+
+void period_0(unsigned short int& Q, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, vector<unsigned short int>& s, vector<unsigned short int>& Vp, vector<unsigned short int>& Vp_start, vector<unsigned short int>& node_arrives, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, vector<double>& credit) {
+	Q = 0;
+	for (unsigned short int i = 0; i < N; i++) {
+		s[i] = 0;
+		credit[i] = 0;
+		no_of_active_nodes[i] = Vp[i] / 4;
+		for (unsigned short int j = Vp_start[i]; j < Vp_start[i + 1]; j++) {
+			if (node_arrives[j] == 0) {
+				active_nodes[c[j]] = true;
+				active_nodes[c_b[j]] = true;
+				active_nodes_original[c_original[j]] = true;
+			}
+			else {
+				active_nodes[c[j]] = false;
+				active_nodes[c_b[j]] = false;
+				active_nodes_original[c_original[j]] = false;
+			}
+		}
+	}
+}
+
+void arrival_times(vector<unsigned short int>& node_arrives, vector<unsigned short int>& Vp_start, unsigned short int& N, ListGraph::NodeMap<bool>& active_nodes, vector<ListGraph::Node>& c, unsigned short int& periods) {
+	for (unsigned short int i = 0; i < N; i++) {
+		for (unsigned short int j = Vp_start[i]; j < Vp_start[i + 1]; j++) {
+			if (!(active_nodes[c[j]])) {
+				node_arrives[j] = rand() % (periods - 1) + 1;
+			}
+		}
+	}
+	return;
+}
+
+
+
+void undi_lemon(unsigned int& m, vector<unsigned int>& arc_in, vector<unsigned int>& arc_out, vector<unsigned short int>& label_positions, ListGraph& g, ListDigraph& g_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, ListGraph::EdgeMap<double>& edge_card_weight, ListDigraph::ArcMap<unsigned short int>& arc_card_weight, unsigned short int& no_of_nodes) {
+	bool halt = false;
+	for (int i = 0; i < no_of_nodes; i++) {
+		ListGraph::Edge e = g.addEdge(c[i], c_b[i]);
+		edge_card_weight[e] = 0;
+	}
+	for (unsigned int i = 0; i < m; i++) {
+		if (label_positions[arc_in[i]] < no_of_nodes) { //XY: filter 65535 positions
+			ListGraph::Edge e = g.addEdge(c[label_positions[arc_out[i]]], c_b[label_positions[arc_in[i]]]);
+			edge_card_weight[e] = 1;
+			ListDigraph::Arc a_original = g_original.addArc(c_original[label_positions[arc_out[i]]], c_original[label_positions[arc_in[i]]]);
+			arc_card_weight[a_original] = 1;
+			/*if (arc_out[i] < arc_in[i]) {
+				for (unsigned int j = i + 1; arc_out[j] < arc_in[i] + 1; j++) {
+					if (arc_out[j] == arc_in[i]) {
+						for (unsigned int k = j; arc_out[k] == arc_out[j]; k++) {
+							if (arc_out[i] == arc_in[k]) {
+								ListGraph::Edge e = g.addEdge(c[label_positions[arc_out[i]]], c[label_positions[arc_in[i]]]);
+								edge_card_weight[e] = 1;
+								if (!(abs(node_arrives[label_positions[arc_out[i]]] - node_arrives[label_positions[arc_in[i]]]) > 3)) { //XY: valid patient-donor pairs in 1 year
+									g_ideal.addEdge(c[label_positions[arc_out[i]]], c[label_positions[arc_in[i]]]);
+								}
+								halt = true;
+							}
+							if ((halt) || (k == m - 1))
+								break;
+						}
+					}
+					if ((halt) || (j == m - 1)) {
+						halt = false;
+						break;
+					}
+				}
+			}*/
+		}
+	}
+	/*cout << "start id" << endl;
+	for (ListDigraph::NodeIt n(g_original); n != INVALID; ++n) {
+		std::cout << g_original.id(n) << std::endl;
+	}
+
+	cout << "g-c && g--c_b" << endl;
+	for (unsigned short int i = 0; i < c.size(); ++i) {
+		cout << g.id(c[i]) << " " << g.id(c_b[i]) << endl;
+	}*/
+	return;
+}
+
+void xml_parser(string& line, vector<unsigned short int>& node_labels, vector<unsigned short int>& label_positions, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, unsigned short int& k, ListGraph& g, ListDigraph& g_original, vector<unsigned int>& arc_in, vector<unsigned int>& arc_out, unsigned int& m, unsigned short int& no_of_nodes) {
+	unsigned int l = 6;
+	unsigned short int n = 0; //XY: track the number of nodes
+	while (l < line.size() - 7) {
+		if (line[l] == '<' && line[l + 1] == 'e') {
+			l = l + 17;
+			n++;
+			if (!is_next_char_digit(line, l)) {
+				node_labels[n - 1] = char2uint(line[l]); //XY: donor id
+			}
+			else {
+				if (!is_next_char_digit(line, l + 1)) {
+					node_labels[n - 1] = 10 * char2uint(line[l]) + char2uint(line[l + 1]);
+					l++;
+				}
+				else {
+					if (!is_next_char_digit(line, l + 2)) {
+						node_labels[n - 1] = 100 * char2uint(line[l]) + 10 * char2uint(line[l + 1]) + char2uint(line[l + 2]);
+						l = l + 2;
+					}
+					else {
+						node_labels[n - 1] = 1000 * char2uint(line[l]) + 100 * char2uint(line[l + 1]) + 10 * char2uint(line[l + 2]) + char2uint(line[l + 3]);
+						l = l + 3;
+					}
+				}
+			}
+			if (n + k - 1 == node_labels[n - 1]) {
+				label_positions[n + k - 1] = n - 1;
+			}
+			else {
+				while (n + k - 1 < node_labels[n - 1]) {
+					label_positions[n + k - 1] = 65535;
+					label_positions.push_back(0);
+					k++;
+				}
+				label_positions[n + k - 1] = n - 1;
+			}
+
+			c[n - 1] = g.addNode();//XY: add donor ids
+			c_b[n - 1] = g.addNode();//changed by XY, add patient ids
+			c_original[n - 1] = g_original.addNode();//changed by XY, add patient-donor pairs to the original graph
+			l = l + 9;
+			if (!is_next_char_digit(line, l)) {
+				////donor_ages.push_back(char2uint(line[l]));
+				//donor_ages[n - 1] = char2uint(line[l]);
+			}
+			else {
+				if (!is_next_char_digit(line, l + 1)) {
+					////donor_ages.push_back(10*char2uint(line[l])+char2uint(line[l+1]));
+					//donor_ages[n - 1] = 10*char2uint(line[l])+char2uint(line[l+1]);
+					l++;
+				}
+				else {
+					if (!is_next_char_digit(line, l + 2)) {
+						////donor_ages.push_back(100*char2uint(line[l])+10*char2uint(line[l+1])+char2uint(line[l+2]));
+						//donor_ages[n - 1] = 100*char2uint(line[l])+10*char2uint(line[l+1])+char2uint(line[l+2]);
+						l = l + 2;
+					}
+					else {
+						////if (!is_next_char_digit(line, l + 3)){
+						////donor_ages.push_back(1000*char2uint(line[l])+100*char2uint(line[l+1])+10*char2uint(line[l+2])+char2uint(line[l+3]));
+						//donor_ages[n - 1] = 1000*char2uint(line[l])+100*char2uint(line[l+1])+10*char2uint(line[l+2])+char2uint(line[l+3]);
+						l = l + 3;
+						////}
+					}
+				}
+			}
+			l = l + 25;
+			if (!is_next_char_digit(line, l)) {
+				if (node_labels[n - 1] != char2uint(line[l]))
+					cout << "ID ERROR!" << endl;
+			}
+			else {
+				if (!is_next_char_digit(line, l + 1)) {
+					if (node_labels[n - 1] != 10 * char2uint(line[l]) + char2uint(line[l + 1]))
+						cout << "ID ERROR!" << endl;
+					l++;
+				}
+				else {
+					if (!is_next_char_digit(line, l + 2)) {
+						if (node_labels[n - 1] != 100 * char2uint(line[l]) + 10 * char2uint(line[l + 1]) + char2uint(line[l + 2]))
+							cout << "ID ERROR!" << endl;
+						l = l + 2;
+					}
+					else {
+						//if (!is_next_char_digit(line, l + 3)){
+						if (node_labels[n - 1] != 1000 * char2uint(line[l]) + 100 * char2uint(line[l + 1]) + 10 * char2uint(line[l + 2]) + char2uint(line[l + 3]))
+							cout << "ID ERROR!" << endl;
+						l = l + 3;
+						//}
+					}
+				}
+			}
+			if (line[l + 21] == 'm')
+				l = l + 29;
+			else
+				l = l + 28;
+		}
+		// XY: recipients
+		while (line[l] == '<' && line[l + 1] == 'm' && line[l + 6] == '>') {
+			m++;//number of compatibilities
+			l = l + 18;
+			arc_out.push_back(node_labels[n - 1]);
+			if (!is_next_char_digit(line, l)) {
+				arc_in.push_back(char2uint(line[l]));
+			}
+			else {
+				if (!is_next_char_digit(line, l + 1)) {
+					arc_in.push_back(10 * char2uint(line[l]) + char2uint(line[l + 1]));
+					l++;
+				}
+				else {
+					if (!is_next_char_digit(line, l + 2)) {
+						arc_in.push_back(100 * char2uint(line[l]) + 10 * char2uint(line[l + 1]) + char2uint(line[l + 2]));
+						l = l + 2;
+					}
+					else {
+						//if (!is_next_char_digit(line, l + 3)){
+						arc_in.push_back(1000 * char2uint(line[l]) + 100 * char2uint(line[l + 1]) + 10 * char2uint(line[l + 2]) + char2uint(line[l + 3]));
+						l = l + 3;
+						//}
+					}
+				}
+			}
+			l = l + 20;
+			if (!is_next_char_digit(line, l)) {
+				//arc_weight.push_back(char2uint(line[l]));
+			}
+			else {
+				if (!is_next_char_digit(line, l + 1)) {
+					//arc_weight.push_back(10*char2uint(line[l])+char2uint(line[l+1]));
+					l++;
+				}
+				else {
+					if (!is_next_char_digit(line, l + 2)) {
+						//arc_weight.push_back(100*char2uint(line[l])+10*char2uint(line[l+1])+char2uint(line[l+2]));
+						l = l + 2;
+					}
+					else {
+						////if (!is_next_char_digit(line, l + 3)){
+						//arc_weight.push_back(1000*char2uint(line[l])+100*char2uint(line[l+1])+10*char2uint(line[l+2])+char2uint(line[l+3]));
+						l = l + 3;
+						////}
+					}
+				}
+			}
+			l = l + 17;
+		}
+		if (!(line[l] == '<' && line[l + 1] == 'e')) {
+			l = l + 18;
+		}
+		if (n == no_of_nodes)
+			break;
+	}
+	cout << "the number of nodes" << n;
+	//cout << "node_labels[n - 1] " << node_labels[n - 1] <<"\n";
+	/*cout << "size of label postions" << label_positions.size();
+	for (int i = 0; i < label_positions.size(); i++) {
+		cout << label_positions[i] << endl;
+	}
+	cout << "size of node labels" << node_labels.size();
+	for (int i = 0; i < node_labels.size(); i++) {
+		cout << node_labels[i] << endl;
+	}*/
+	//int max_arc_in = *max_element(arc_in.begin(), arc_in.end());
+	//int max_arc_out= *max_element(arc_out.begin(), arc_out.end());
+	//cout << "max value of arc_in: " <<max_arc_in<< "\n"<<"max value of arc_out : "<<max_arc_out<<endl;
+
+	//cout << "k: " << k << "\n";
+	cout << "m: " << m << "\n";
+	cout << "arc_in.size(): " << arc_in.size() << "\n" << " arc_out.size(): " << arc_out.size() << endl;
+	return;
+}
+
+bool is_next_char_digit(string& line, unsigned int l) {
+	if (line[l + 1] == '0' || line[l + 1] == '1' || line[l + 1] == '2' || line[l + 1] == '3' || line[l + 1] == '4' || line[l + 1] == '5' || line[l + 1] == '6' || line[l + 1] == '7' || line[l + 1] == '8' || line[l + 1] == '9')
+		return true;
+	return false;
+}
+
+unsigned int char2uint(char& p) {
+	if (p == '1')
+		return 1;
+	else
+		if (p == '2')
+			return 2;
+		else
+			if (p == '3')
+				return 3;
+			else
+				if (p == '4')
+					return 4;
+				else
+					if (p == '5')
+						return 5;
+					else
+						if (p == '6')
+							return 6;
+						else
+							if (p == '7')
+								return 7;
+							else
+								if (p == '8')
+									return 8;
+								else
+									if (p == '9')
+										return 9;
+									else
+										return 0;
+}
+
+double cpuTime() {
+	return (double)clock() / CLOCKS_PER_SEC;
+}
+
+
+
+void ILP_d1_gurobi(unsigned short int& Q, unsigned short int& N, ListDigraph& g_original, vector<unsigned short int>& Vp_start, vector<unsigned short int>& node_arrives, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<pair<int, int>>& arc_pair, vector<int>& nodeset, vector<vector<unsigned short int>>& actual_alloc, double& M, double& M_total, vector<unsigned short int>& s, vector<pair<int, int>>& cycle_distri, vector<double>& target, vector<bool>& leaving, vector<double>& d, double& d_total, bool& c_involved, vector<double>& credit, map<int, int>& cycle_dis, vector<double>& init_alloc, bool lex_min, unsigned short int inst, std::map<int, std::map<int, int>>& cycle_dis_period, vector<vector<double>>& average_d_period, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit) {
+	pair_arcs(Q, g_original, node_arrives, active_nodes_original, arc_pair, nodeset);
+	FilterNodes<ListDigraph> sg(g_original, active_nodes_original);
+	long col_num = countArcs(sg) + 1;
+	cout << "column: " << col_num - 1 << endl;
+	cout << "countArcs(g_original): " << countArcs(g_original) << endl;
+	M_total += M;
+	//int node_number = countNodes(g_original);
+	const unsigned short int row_num = N + 2 * nodeset.size() + 1;
+	// Create an environment
+	GRBEnv env = GRBEnv(true);
+	env.set("LogFile", "mip_shapley_lexmin_c.log");
+	env.start();
+
+	// Create an empty model
+	GRBModel model = GRBModel(env);
+	model.set("TimeLimit", "3600");
+	vector<GRBModel> vector_model(2 * N - 1, GRBEnv(env));
+	for (unsigned short int i = 0; i < 2 * N - 1; ++i) {
+		vector_model[i].set("TimeLimit", "3600");
+	}
+	// Create variables
+	vector<GRBVar> var_bi(col_num + 2 * N);
+	for (unsigned short int i = 0; i < col_num - 1; ++i) {
+		var_bi[i] = model.addVar(0.0, 1.0, 0.0, GRB_BINARY, "x" + to_string(i));
+	}
+	var_bi[col_num - 1] = model.addVar(0.0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, "x" + to_string(col_num - 1));
+	// N difference variables
+	for (unsigned short int i = col_num; i < col_num + N; ++i) {
+		var_bi[i] = model.addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS, "x" + to_string(i));
+	}
+	// N abs variables
+	for (unsigned short int i = col_num + N; i < col_num + 2 * N; ++i) {
+		var_bi[i] = model.addVar(0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, "x" + to_string(i));
+	}
+	model.setObjective(1 * var_bi[col_num - 1], GRB_MINIMIZE);
+	vector<double> bound(row_num, 0);
+	for (unsigned short int i = 1; i < N + 1; ++i) {
+		bound[i - 1] = init_alloc[i - 1] + credit[i - 1];
+	}
+	/*for (unsigned short int i = 1 + N; i < 2 * N + 1; ++i) {
+		bound[i - 1] = target[i - 1];
+	}*/
+	for (unsigned short int i = N + 1; i < N + 1 + nodeset.size(); ++i) {
+		bound[i - 1] = 0;
+	}
+	for (unsigned short int i = N + nodeset.size() + 1; i < N + 2 * (nodeset.size()) + 1; ++i) {
+		bound[i - 1] = 1;
+	}
+	bound[row_num - 1] = M;
+	cout << "size of max-weighted perfect matching: " << M << endl;
+	long matrix_num = row_num * col_num;
+	vector<int> ia(matrix_num + 1, 0);
+	vector<int> ja(matrix_num + 1, 0);
+	vector<double> ar(matrix_num + 1, 0);
+
+	long cnt_2 = 0;
+
+	for (int i = 1; i < N + 1; ++i) {
+		for (int k = 1; k < arc_pair.size() + 1; ++k) {
+			if (Vp_start[i - 1] <= arc_pair[k - 1].second && arc_pair[k - 1].second < Vp_start[i]) {
+				++cnt_2;
+				ia[cnt_2] = i;
+				ja[cnt_2] = k;
+				ar[cnt_2] = 1.0;
+			}
+
+		}
+	}
+
+	int cnt_2_row = N;
+	for (int i = 0; i < nodeset.size(); ++i) {
+		for (int k = 1; k < arc_pair.size() + 2; ++k) {
+			if (k < arc_pair.size() + 1) {
+				if (arc_pair[k - 1].first == nodeset[i]) {
+					++cnt_2;
+					ia[cnt_2] = cnt_2_row + i + 1;
+					ja[cnt_2] = k;
+					ar[cnt_2] = 1.0;
+				}
+				if (arc_pair[k - 1].second == nodeset[i]) {
+					++cnt_2;
+					ia[cnt_2] = cnt_2_row + i + 1;
+					ja[cnt_2] = k;
+					ar[cnt_2] = -1.0;
+				}
+			}
+
+		}
+	}
+
+
+
+	int cnt_3_row = N + nodeset.size();
+	for (int i = 0; i < nodeset.size(); ++i) {
+		for (int k = 1; k < arc_pair.size() + 2; ++k) {
+			if (k < arc_pair.size() + 1) {
+				if (arc_pair[k - 1].second == nodeset[i]) {
+					++cnt_2;
+					ia[cnt_2] = cnt_3_row + i + 1;
+					ja[cnt_2] = k;
+					ar[cnt_2] = 1.0;
+				}
+			}
+
+
+		}
+	}
+
+
+	int cnt_4_row = N + 2 * nodeset.size();
+	for (int k = 1; k < arc_pair.size() + 2; ++k) {
+		if (k < arc_pair.size() + 1) {
+			++cnt_2;
+			ia[cnt_2] = row_num;
+			ja[cnt_2] = k;
+			ar[cnt_2] = 1.0;
+		}
+
+	}
+
+	vector<GRBLinExpr> sum_row(row_num, 0);
+
+	for (long j = 1; j < cnt_2 + 1; ++j) {
+		sum_row[ia[j] - 1] += ar[j] * var_bi[ja[j] - 1];
+	}
+	cout << "finish loading efficiencies" << endl;
+	for (unsigned short int i = 1; i < N + 1; ++i) {
+		model.addConstr(var_bi[col_num + i - 1] == sum_row[i - 1] - bound[i - 1]);
+		model.addGenConstrAbs(var_bi[col_num + N + i - 1], var_bi[col_num + i - 1]);
+		model.addConstr(var_bi[col_num + N + i - 1] <= var_bi[col_num - 1]);
+	}
+
+	for (unsigned short int i = N + 1; i < N + 1 + nodeset.size(); ++i) {
+		model.addConstr(sum_row[i - 1] == bound[i - 1]);
+	}
+	for (unsigned short int i = N + nodeset.size() + 1; i < N + 2 * (nodeset.size()) + 1; ++i) {
+		model.addConstr(sum_row[i - 1] <= bound[i - 1]);
+	}
+	model.addConstr(sum_row[row_num - 1] == bound[row_num - 1]);
+
+
+	model.optimize();
+
+	int optimstatus = model.get(GRB_IntAttr_Status);
+	if (optimstatus != 2) {
+		track_not_optimal[N - 4][inst] = optimstatus;
+		if (optimstatus == 9) {
+			track_time_limit[N - 4][inst] = optimstatus;
+		}
+	}
+
+	vector<double> d_t(N, 0);
+	d_t[0] = var_bi[col_num - 1].get(GRB_DoubleAttr_X);
+	std::cout << "d_t[0]" << d_t[0] << endl;
+	vector<unsigned short int> N_star(N, 0);
+	unsigned short int n_star = 0;
+	unsigned short int t_star = 0;
+	double epsilon = 0;
+	unsigned short int track = 0;
+	vector<GRBVar> var_lexmin(arc_pair.size());
+	if (d_t[0] > 0.5 && lex_min) {
+		epsilon_func(init_alloc, credit, epsilon, N);
+		sort_d_t(d_t, var_bi, col_num, N, Vp_start, arc_pair, init_alloc, t_star, credit, epsilon, var_lexmin, N_star);
+	}
+	std::cout << "finish sorting" << "epsilon:" << epsilon << endl;
+	std::cout << "start n_star_1" << endl;
+	if (lex_min && d_t[0] > 0.5 && abs(epsilon) > pow(10, -4)) {
+		lex_min_n_star(d_t, lex_min, t_star, N, col_num, epsilon, n_star, model, ia, ja, ar, row_num, cnt_2, bound, nodeset, N_star, var_lexmin, vector_model, track, track_not_optimal, track_time_limit, inst);
+	}
+	std::cout << "finish n_star_1" << endl;
+	lexmin_searching(d_t, lex_min, t_star, N, col_num, epsilon, n_star, model, ia, ja, ar, row_num, cnt_2, bound, nodeset, N_star, Vp_start, arc_pair, init_alloc, credit, var_lexmin, inst, vector_model, track, track_not_optimal, track_time_limit);
+
+	cout << "finish lexmin_searching" << endl;
+
+	unsigned short int t = 0;
+	for (unsigned short int i = 1; i < arc_pair.size() + 1; ++i) {
+		if (lex_min && d_t[0] > 0.5) {
+			if (var_lexmin[i - 1].get(GRB_DoubleAttr_X) > pow(10, -4)) {
+				++t;
+				leaving[arc_pair[i - 1].first] = true;
+				leaving[arc_pair[i - 1].second] = true;
+				cycle_distri.push_back(arc_pair[i - 1]);
+				for (unsigned short int j = 0; j < N; ++j) {
+					if (Vp_start[j] <= arc_pair[i - 1].second && arc_pair[i - 1].second < Vp_start[j + 1]) {
+						++s[j];
+					}
+				}
+			}
+
+		}
+		else {
+			if (var_bi[i - 1].get(GRB_DoubleAttr_X) > pow(10, -4)) {
+				++t;
+				leaving[arc_pair[i - 1].first] = true;
+				leaving[arc_pair[i - 1].second] = true;
+				cycle_distri.push_back(arc_pair[i - 1]);
+				for (unsigned short int j = 0; j < N; ++j) {
+					if (Vp_start[j] <= arc_pair[i - 1].second && arc_pair[i - 1].second < Vp_start[j + 1]) {
+						++s[j];
+					}
+				}
+			}
+		}
+
+	}
+	model.reset();
+	model.update();
+	for (unsigned short int i = 0; i < track + 1; ++i) {
+		vector_model[i].reset();
+		vector_model[i].update();
+	}
+
+
+	cycle_distribution(cycle_dis_period, cycle_dis, cycle_distri, N, Q);
+	std::cout << "maximum size: " << t;
+	cout << "maximum size: " << t;
+	double temp = 0;
+	for (unsigned short int i = 0; i < N; ++i) {
+		d[i] += init_alloc[i] - s[i];
+		temp += abs(d[i]);
+		if (c_involved) {
+			credit[i] += init_alloc[i] - s[i];
+		}
+		else {
+			credit[i] = 0;
+		}
+		cout << "country" << to_string(i) << "init_alloc[i]: " << init_alloc[i] << '/n' << "s[i]: " << s[i] << "d[i]: " << d[i] << "credit[i]: " << credit[i] << endl;
+		//actual_alloc[Q].push_back(s[i]);
+	}
+	average_d_period[N - 4][Q] += temp;
+	return;
+}
+
+
+void arbitraryMaximum(vector<unsigned short int>& node_arrives, ListGraph& g, ListDigraph& g_original, vector<pair<int, int>>& arc_pair, vector<bool>& leaving, ListGraph::NodeMap<bool>& active_nodes, ListDigraph::NodeMap<bool>& active_nodes_original, vector<ListGraph::Node>& c, vector<ListGraph::Node>& c_b, vector<ListDigraph::Node>& c_original, bool& disp, vector<unsigned short int>& no_of_active_nodes, unsigned short int& N, vector<unsigned short int>& Vp_start, unsigned short int& periods, bool& dispy, vector<unsigned short int>& s, unsigned short int& Q, vector<double>& v, bool& target_omega, vector<double>& target, vector<double>& credit, ListGraph::EdgeMap<double>& edge_card_weight, double& t0, vector<vector<unsigned short int>>& actual_alloc, vector<double>& v_impu, vector<int>& nodeset, vector<pair<int, int>>& cycle_distri, vector<double>& d, double& M_total, double& d_total, bool& c_involved, map<int, int>& cycle_dis, bool& arbitray_maximum, vector<double>& v_S, unsigned int& S, int& convex, int& quasibalanced, int& coincidence, unsigned short int inst, double& max_d, int& unique, double& game_generation, double& solution_time, std::map<int, std::map<int, int>>& cycle_dis_arbitrary_period, vector<vector<double>>& average_d_period, vector<vector<double>>& time_breakdown) {
+	Q = 0;
+	d_total = 0;
+	M_total = 0;
+	if (dispy)
+		cout << " --== Without lex min matching == -- " << endl;
+	for (unsigned short int i = 0; i < N; i++) {
+		s[i] = 0;
+		credit[i] = 0;
+		no_of_active_nodes[i] = (Vp_start[i + 1] - Vp_start[i]) / 4;
+		for (unsigned short int j = Vp_start[i]; j < Vp_start[i + 1]; j++) {
+			if (node_arrives[j] == 0) {
+				active_nodes[c[j]] = true;
+				active_nodes[c_b[j]] = true;
+				active_nodes_original[c_original[j]] = true;
+			}
+			else {
+				active_nodes[c[j]] = false;
+				active_nodes[c_b[j]] = false;
+				active_nodes_original[c_original[j]] = false;
+			}
+		}
+	}
+	while (Q < periods) {
+		if (dispy) {
+			cout << "--== PERIOD " << Q + 1 << " ==--" << endl;
+		}
+		if (dispy) {
+			cout << "Number of active nodes: ";
+			for (unsigned short int i = 0; i < N; i++)
+				cout << no_of_active_nodes[i] << " ";
+			cout << endl;
+		}
+		// cooperative game and target
+		cout << "start generating values" << endl;
+		coop_game(g, v, v_impu, v_S, S, s, c, c_b, edge_card_weight, dispy, Vp_start, N, active_nodes, leaving, Q, arbitray_maximum, cycle_distri, cycle_dis, game_generation, cycle_dis_arbitrary_period, time_breakdown, inst);
+		double suma = 0;
+		double sumimpu = 0;
+		vector<double> benefit(N, 0);
+		double prec = pow(10, -7);
+		double t0 = cpuTime();
+		if (target_omega) {
+			for (unsigned short int i = 0; i < N; i++) {
+				suma += v[N] - v[i] - v_impu[i];
+				sumimpu += v_impu[i];
+			}
+			if (abs(suma) < prec) {
+				unique++;
+			}
+			for (unsigned short int i = 0; i < N; i++)
+				benefit[i] = v_impu[i] + (v[N] - sumimpu) * ((v[N] - v[i] - v_impu[i]) / suma);
+		}
+		else {
+			for (unsigned short int i = 0; i < N; i++) {
+				suma += v[N] - v[i];
+				sumimpu += v_impu[i];
+			}
+			for (unsigned short int i = 0; i < N; i++)
+				target[i] = v_impu[i] + (v[N] - sumimpu) * ((v[N] - v[i]) / suma);
+		}
+
+		M_total += v[N];
+
+		//compute deviations
+		if (dispy) {
+			if (target_omega) {
+				cout << "Benefit: ";
+			}
+			else {
+				cout << "Contribution: ";
+			}
+			for (unsigned short int i = 0; i < N; i++) {
+				cout << target[i] << " ";
+			}
+			cout << endl;
+		}
+
+
+		bool quasibal = false;
+		double temp = 0;
+		temp = tau(benefit, N, S, prec, disp, target, quasibal, v_S);
+		double t1 = cpuTime();
+		solution_time += t1 - t0;
+		time_breakdown[N - 4][inst * 4 + 1] += t1 - t0;
+		for (unsigned short int i = 0; i < N; ++i) {
+			//cout << "target value: " << target[i] << endl;
+			target[i] = benefit[i];
+			//cout << "tau value: " << target[i] << endl;
+			//cout << "tau(benefit, N, S, prec, disp, target, quasibal, v_S)"<< tau(benefit, N, S, prec, disp, target, quasibal, v_S,v) << endl;
+			//cout << "quasibal: " << quasibal << endl;
+			//cout << "convex_game(N, S, v_S, prec): " << convex_game(N, S, v_S, prec) << endl;
+		}
+		if (quasibal) {
+			++quasibalanced;
+		}
+		if (abs(temp) < prec) {
+			++coincidence;
+		}
+		if (convex_game(N, S, v_S, prec)) {
+			++convex;
+		}
+
+		double temp_0 = 0;
+		for (unsigned short int i = 0; i < N; ++i) {
+			d[i] += target[i] - s[i];
+			temp_0 += abs(d[i]);
+			if (c_involved) {
+				credit[i] += target[i] - s[i];
+			}
+			else {
+				credit[i] = 0;
+			}
+			cout << "country" << to_string(i) << "target[i]: " << target[i] << '/n' << "s[i]: " << s[i] << "d[i]: " << d[i] << "credit[i]: " << credit[i] << endl;
+			//actual_alloc[Q].push_back(s[i]);
+		}
+
+		average_d_period[N - 4][Q] += temp_0;
+
+		Q++;
+		changing_nodes(active_nodes, active_nodes_original, leaving, no_of_active_nodes, N, Vp_start, node_arrives, Q, c, c_b, c_original, s, d, target);
+		if (dispy)
+			cin.get();
+	}
+	for (unsigned short int i = 0; i < N; ++i) {
+		d_total += abs(d[i]);
+	}
+	vector<double> max_deviation(N, 0);
+	for (unsigned short int i = 0; i < N; ++i) {
+		max_deviation[i] = abs(d[i]) / M_total;
+	}
+	std::sort(max_deviation.begin(), max_deviation.end());
+	max_d = max_deviation[N - 1];
+	return;
+}
+
+
+void pair_arcs(unsigned short int& Q, ListDigraph& g_original, vector<unsigned short int>& node_arrives, ListDigraph::NodeMap<bool>& active_nodes_original, vector<pair<int, int>>& arc_pair, vector<int>& nodeset) {
+	FilterNodes<ListDigraph> sg(g_original, active_nodes_original);
+	arc_pair.clear();
+	nodeset.clear();
+	for (FilterNodes<ListDigraph>::NodeIt n(sg); n != INVALID; ++n) {
+		nodeset.push_back(sg.id(n));
+	}
+	sort(nodeset.begin(), nodeset.end());
+	for (FilterNodes<ListDigraph>::ArcIt a(sg); a != INVALID; ++a) {
+		arc_pair.push_back({ sg.id(sg.source(a)),sg.id(sg.target(a)) });
+	}
+	sort(arc_pair.begin(), arc_pair.end());
+	return;
+
+}
+
+
+double tau(vector<double>& benefit, unsigned short int& n, unsigned int& s, double& prec, bool& disp, vector<double>& tau_value, bool& quasibal, vector<double>& v_s) {
+	vector<double> b(n, 0);
+	for (unsigned short int i = 0; i < n; i++) {
+
+		//utopia payoff M_p
+		//cout << "v_s[s]: "<<v_s[s] << endl;
+		b[i] = v_s[s] - v_s[s - pow(2, i)];
+		//cout << "b[i]:" << b[i] << endl;
+	}
+
+	vector<double> a(n, -DBL_MAX);
+	vector<bool> S(n, false);
+	double rem = 0;
+	for (unsigned int j = 0; j < s + 1; j++) {
+		de2bi(j, S, n);
+		for (unsigned short int i = 0; i < n; i++) {
+			if (S[i]) {
+				for (unsigned short int k = 0; k < n; k++) {
+					if (i != k) {
+						if (S[k])
+							rem += b[k]; // sum of M_p in the set of S\{j}
+					}
+				}
+				a[i] = max(a[i], v_s[j] - rem); // m_p
+				rem = 0;
+			}
+		}
+	}
+	double cumm_a = a[0]; //sum of m_p
+	double cumm_b = b[0]; // sum of M_p
+	for (unsigned short int i = 1; i < n; i++) {
+		cumm_a += a[i];
+		cumm_b += b[i];
+	}
+	double alpha = (v_s[s] - cumm_b) / (cumm_a - cumm_b);
+	double err = 0;
+	for (unsigned short int i = 0; i < n; i++) {
+		if (a[i] > b[i] + prec) {
+			quasibal = false;
+			err = DBL_MAX;
+			if (disp) {
+				cout << "tau-value ERROR: lower vector (" << a[i] << ") larger than upper vector (" << b[i] << ") at player " << i << endl;
+				cout << "v: ";
+				for (unsigned short int j = 0; j < s + 1; j++)
+					cout << v_s[j] << "  ";
+				cout << endl;
+				cout << "a: ";
+				for (unsigned short int j = 0; j < n; j++)
+					cout << a[j] << "  ";
+				cout << endl;
+				cout << "b: ";
+				for (unsigned short int j = 0; j < n; j++)
+					cout << b[j] << "  ";
+				cout << endl;
+				cout << "alpha = " << alpha << endl;
+				cout << "tau: ";
+				for (unsigned short int j = 0; j < n; j++)
+					cout << alpha * a[j] + (1 - alpha) * b[j] << "  ";
+				cout << endl;
+				cout << "benefit: ";
+				for (unsigned short int j = 0; j < n; j++)
+					cout << benefit[j] << "  ";
+				cout << endl;
+			}
+			return err;
+		}
+	}
+	if (cumm_a > v_s[s] + prec) {
+		quasibal = false;
+		err = DBL_MAX;
+		if (disp) {
+			cout << "tau-value ERROR: cummulated lower vector (" << cumm_a << ") larger than grand coal value (" << v_s[s] << ")" << endl;
+			cout << "v: ";
+			for (unsigned short int j = 0; j < s + 1; j++)
+				cout << v_s[j] << "  ";
+			cout << endl;
+			cout << "a: ";
+			for (unsigned short int j = 0; j < n; j++)
+				cout << a[j] << "  ";
+			cout << endl;
+			cout << "b: ";
+			for (unsigned short int j = 0; j < n; j++)
+				cout << b[j] << "  ";
+			cout << endl;
+			cout << "alpha = " << alpha << endl;
+			cout << "tau: ";
+			for (unsigned short int j = 0; j < n; j++)
+				cout << alpha * a[j] + (1 - alpha) * b[j] << "  ";
+			cout << endl;
+			cout << "benefit: ";
+			for (unsigned short int j = 0; j < n; j++)
+				cout << benefit[j] << "  ";
+			cout << endl;
+		}
+		return err;
+	}
+	if (v_s[s] > cumm_b + prec) {
+		quasibal = false;
+		err = DBL_MAX;
+		if (disp) {
+			cout << "tau-value ERROR: cummulated upper vector (" << cumm_b << ") smaller than grand coal value (" << v_s[s] << ")" << endl;
+			cout << "v: ";
+			for (unsigned short int j = 0; j < s + 1; j++)
+				cout << v_s[j] << "  ";
+			cout << endl;
+			cout << "a: ";
+			for (unsigned short int j = 0; j < n; j++)
+				cout << a[j] << "  ";
+			cout << endl;
+			cout << "b: ";
+			for (unsigned short int j = 0; j < n; j++)
+				cout << b[j] << "  ";
+			cout << endl;
+			cout << "alpha = " << alpha << endl;
+			cout << "tau: ";
+			for (unsigned short int j = 0; j < n; j++)
+				cout << alpha * a[j] + (1 - alpha) * b[j] << "  ";
+			cout << endl;
+			cout << "benefit: ";
+			for (unsigned short int j = 0; j < n; j++)
+				cout << benefit[j] << "  ";
+			cout << endl;
+		}
+		return err;
+	}
+	quasibal = true;
+	for (unsigned short int i = 0; i < n; i++)
+		err += abs(b[i] - a[i]);
+	if (err < prec) {
+		cout << "tau value does not exist!" << endl;
+		err = 0;
+		for (unsigned short int i = 0; i < n; i++) {
+			tau_value[i] = 0.5 * (a[i] + b[i]);
+			err += abs(benefit[i] - tau_value[i]);
+			benefit[i] = tau_value[i];
+		}
+	}
+	else {
+		cout << "tau value exists!" << endl;
+		err = 0;
+		for (unsigned short int i = 0; i < n; i++) {
+			cout << "a[i]:" << a[i] << ", b[i]:" << b[i] << ", alpha:" << alpha << endl;
+			tau_value[i] = alpha * a[i] + (1 - alpha) * b[i];
+			cout << "tau value after calculation: " << tau_value[i] << endl;
+			err += abs(benefit[i] - tau_value[i]);
+			benefit[i] = tau_value[i];
+		}
+	}
+	return err;
+}
+
+bool convex_game(unsigned short int& n, unsigned int& s, vector<double>& v, double& prec) {
+	vector<bool> S(n, false);
+	vector<bool> T(n, false);
+	unsigned int S_cup_T = 0;
+	unsigned int S_cap_T = 0;
+	unsigned short int card = 0;
+	for (unsigned int i = 2; i < s; i++) {
+		de2bi_card(i, S, n, card);
+		if (card > 1) {
+			for (unsigned int j = i + 1; j < s + 1; j++) {
+				de2bi(j, T, n);
+				for (unsigned int k = 0; k < n; k++) {
+					if (S[k]) {
+						S_cup_T += pow(2, k);
+						if (T[k])
+							S_cap_T += pow(2, k);
+					}
+					else {
+						if (T[k])
+							S_cup_T += pow(2, k);
+					}
+				}
+				if (S_cup_T - 1 != i) {
+					if (S_cap_T > 0) {
+						if (S_cap_T - 1 != i) {
+							if (v[S_cup_T - 1] + v[S_cap_T - 1] + prec <= v[i] + v[j])
+								return false;
+						}
+						S_cap_T = 0;
+					}
+				}
+				S_cup_T = 0;
+			}
+		}
+	}
+	return true;
+}
+
+void de2bi_card(unsigned int& k, vector<bool>& a, unsigned short int& n, unsigned short int& card) {
+	vector<bool> zero(n, false);
+	card = 0;
+	a = zero;
+	unsigned int i = 2;
+	for (unsigned short int c = 0; c < n - 2; c++)
+		i += i;
+	unsigned int j = k + 1;
+	unsigned short int l = n - 1;
+	while (j > 0) {
+		if (j >= i) {
+			a[l] = true;
+			card++;
+			j -= i;
+		}
+		i /= 2;
+		l--;
+	}
+	return;
+}
+
+void sort_d_t(vector<double>& d_t, vector<GRBVar>& var_bi, long& col_num, unsigned short int& N, vector<unsigned short int>& Vp_start, vector<pair<int, int>>& arc_pair, vector<double>& target, unsigned short int& t, vector<double>& credit, double& epsilon, vector<GRBVar>& var_lexmin, vector<unsigned short int>& N_star) {
+	unsigned short int n_star = 0;
+	vector<unsigned short int> s_copy(N, 0);
+	vector<double> d_copy(N, 0);
+	for (unsigned short int i = 1; i < arc_pair.size() + 1; ++i) {
+		var_lexmin[i - 1] = var_bi[i - 1];
+		//cout << "{" << arc_pair[i].first << "," << arc_pair[i].second << "}" << endl;
+		//cout << var_bi[i - 1].get(GRB_DoubleAttr_X);
+		if (var_bi[i - 1].get(GRB_DoubleAttr_X) > pow(10, -4)) {
+			for (unsigned short int j = 0; j < N; ++j) {
+				if (Vp_start[j] <= arc_pair[i - 1].second && arc_pair[i - 1].second < Vp_start[j + 1]) {
+					++s_copy[j];
+				}
+			}
+		}
+	}
+	for (unsigned short int i = 0; i < N; ++i) {
+		d_copy[i] = abs(target[i] + credit[i] - s_copy[i]);
+	}
+	//sort
+	std::sort(d_copy.begin(), d_copy.end());
+	if (epsilon > 3 * pow(10, -4)) {
+		d_t[t] = d_copy[N - 1 - t] + pow(10, -4);
+	}
+	else {
+		d_t[t] = d_copy[N - 1 - t];
+	}
+	//epsilon_func(target, credit, epsilon, N);
+	d_t[t] = d_copy[N - 1 - t];
+
+	if (t < N - 1) {
+		d_t[t + 1] = d_copy[N - 2 - t];
+	}
+	std::cout << "d" << to_string(t - 1) << d_t[t - 1] << endl;
+	std::cout << "epsilon: " << epsilon << endl;
+}
+
+void lex_min_n_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, vector<GRBVar>& var_lexmin, vector<GRBModel>& vector_model, unsigned short int& track, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit, unsigned short int& inst) {
+	++track;
+	std::cout << "t_star: " << t_star << endl;
+	vector<GRBVar> var_bi(col_num + N * (t_star + 3));
+	std::cout << "var_bi.size(): " << var_bi.size() << endl;
+	//arc variables
+	for (unsigned short int i = 0; i < col_num - 1; ++i) {
+		var_bi[i] = vector_model[track].addVar(0.0, 1.0, 0.0, GRB_BINARY, "x" + to_string(i));
+	}
+	// N difference variables
+	for (unsigned short int i = col_num; i < col_num + N; ++i) {
+		var_bi[i] = vector_model[track].addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS, "x" + to_string(i));
+	}
+	// N abs variables
+	for (unsigned short int i = col_num + N; i < col_num + N * 2; ++i) {
+		var_bi[i] = vector_model[track].addVar(0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, "x" + to_string(i));
+	}
+	// z^t_p variables
+	for (unsigned short i = col_num + N * 2; i < col_num + N * (t_star + 3); ++i) {
+		var_bi[i] = vector_model[track].addVar(0.0, 1.0, 0.0, GRB_BINARY, "x" + to_string(i));
+	}
+
+	//sum zp
+	GRBLinExpr sum_zp = 0;
+	for (unsigned short int i = col_num + N * (t_star + 2); i < col_num + N * (t_star + 3); ++i) {
+		sum_zp += var_bi[i];
+	}
+	vector_model[track].setObjective(sum_zp, GRB_MINIMIZE);
+	vector<GRBLinExpr> sum_row(row_num, 0);
+	vector<GRBLinExpr> sum_zp_dp(N, 0);
+	vector<GRBLinExpr> sum_zp_0(N, 0);
+	vector<GRBLinExpr> sum_t_star(t_star + 1, 0);
+	vector<GRBLinExpr> sum_p(N, 0);
+	for (unsigned short int i = 0; i < t_star; ++i) {
+		for (unsigned short int j = 0; j < N; ++j) {
+			sum_zp_dp[j] += var_bi[i * N + col_num + N * 2 + j] * d_t[i];
+			sum_zp_0[j] += var_bi[i * N + col_num + N * 2 + j];
+			sum_t_star[i] += var_bi[i * N + col_num + N * 2 + j];
+			sum_p[j] += var_bi[i * N + col_num + N * 2 + j];
+		}
+	}
+	for (unsigned short int j = 0; j < N; ++j) {
+		sum_p[j] += var_bi[t_star * N + col_num + N * 2 + j];
+	}
+	std::cout << "finish loading z^t_p" << endl;
+	for (long j = 1; j < cnt_2 + 1; ++j) {
+		sum_row[ia[j] - 1] += ar[j] * var_bi[ja[j] - 1];
+	}
+	std::cout << "finish loading coefficiencies" << endl;
+	for (unsigned short int i = 1; i < N + 1; ++i) {
+		vector_model[track].addConstr(var_bi[col_num + i - 1] == sum_row[i - 1] - bound[i - 1]);
+		vector_model[track].addGenConstrAbs(var_bi[col_num + N + i - 1], var_bi[col_num + i - 1]);
+		if (t_star == 0) {
+			vector_model[track].addConstr(var_bi[col_num + N + i - 1] <= d_t[t_star] - epsilon * (1 - var_bi[col_num + 2 * N + t_star * N + i - 1]));
+		}
+		if (t_star > 0) {
+			vector_model[track].addQConstr(var_bi[col_num + N + i - 1] <= (1 - sum_zp_0[i - 1]) * (d_t[t_star] - epsilon * (1 - var_bi[col_num + 2 * N + t_star * N + i - 1])) + sum_zp_dp[i - 1]);
+		}
+	}
+	std::cout << "finish loading constraint 1" << endl;
+	for (unsigned short int i = N + 1; i < N + 1 + nodeset.size(); ++i) {
+		vector_model[track].addConstr(sum_row[i - 1] == bound[i - 1]);
+	}
+	std::cout << "finish loading constraint 2" << endl;
+	for (unsigned short int i = N + nodeset.size() + 1; i < N + 2 * (nodeset.size()) + 1; ++i) {
+		vector_model[track].addConstr(sum_row[i - 1] <= bound[i - 1]);
+	}
+	std::cout << "finish loading constraint 3" << endl;
+	vector_model[track].addConstr(sum_row[row_num - 1] == bound[row_num - 1]);
+	std::cout << "finish loading constraint 4" << endl;
+	for (unsigned short int i = 0; i < N; ++i) {
+		vector_model[track].addConstr(sum_p[i] <= 1);
+	}
+	std::cout << "finish loading constraint 5" << endl;
+	for (unsigned short int i = 0; i < t_star; ++i) {
+		vector_model[track].addConstr(sum_t_star[i] == N_star[i]);
+	}
+	std::cout << "finish loading constraint 6" << endl;
+	std::cout << "finish loading constraints" << endl;
+	vector_model[track].optimize();
+
+	int optimstatus = vector_model[track].get(GRB_IntAttr_Status);
+	if (optimstatus != 2) {
+		track_not_optimal[N - 4][inst] = optimstatus;
+		if (optimstatus == 9) {
+			track_time_limit[N - 4][inst] = optimstatus;
+		}
+	}
+
+	for (unsigned short int i = 0; i < t_star + 1; ++i) {
+		for (unsigned short int j = 0; j < N; ++j) {
+			std::cout << "t: " << i << " " << "country:" << j << ": " << var_bi[col_num + N * (2 + i) + j].get(GRB_DoubleAttr_X) << endl;
+		}
+	}
+	for (unsigned short int i = 0; i < N; ++i) {
+		if (var_bi[col_num + N * (2 + t_star) + i].get(GRB_DoubleAttr_X) > pow(10, -4)) {
+			N_star[t_star] += 1;
+		}
+		std::cout << "var_bi[col_num + N * (2 + t_star) + i].get(GRB_DoubleAttr_X): " << var_bi[col_num + N * (2 + t_star) + i].get(GRB_DoubleAttr_X) << endl;
+
+	}
+	std::cout << "epsilon: " << epsilon << "d_t[t_star: " << d_t[t_star] << endl;
+	std::cout << "N_star[t_star]: " << N_star[t_star] << endl;
+	std::cout << "finish n_" << to_string(t_star) << endl;
+	n_star = 0;
+	for (unsigned short int i = 0; i < N; ++i) {
+		n_star += N_star[i];
+	}
+	t_star += N_star[t_star];
+	for (unsigned short int i = 0; i < col_num - 1; ++i) {
+		var_lexmin[i] = var_bi[i];
+	}
+
+}
+
+void lex_min_d_star(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, vector<unsigned short int>& Vp_start, vector<pair<int, int>>& arc_pair, vector<double>& target, vector<double>& credit, vector<GRBVar>& var_lexmin, vector<GRBModel>& vector_model, unsigned short int& track, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit, unsigned short int& inst) {
+	++track;
+	vector<GRBVar> var_bi(col_num + N * (t_star + 3));
+	//arc variables
+	for (unsigned short int i = 0; i < col_num - 1; ++i) {
+		var_bi[i] = vector_model[track].addVar(0.0, 1.0, 0.0, GRB_BINARY, "x" + to_string(i));
+	}
+	// d_t variable
+	var_bi[col_num - 1] = vector_model[track].addVar(0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, "d" + to_string(t_star));
+	// N difference variables
+	for (unsigned short int i = col_num; i < col_num + N; ++i) {
+		var_bi[i] = vector_model[track].addVar(-GRB_INFINITY, GRB_INFINITY, 0.0, GRB_CONTINUOUS, "x" + to_string(i));
+	}
+	// N abs variables
+	for (unsigned short int i = col_num + N; i < col_num + N * 2; ++i) {
+		var_bi[i] = vector_model[track].addVar(0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, "x" + to_string(i));
+	}
+	//zp variables
+	for (unsigned short i = col_num + N * 2; i < col_num + N * (t_star + 2); ++i) {
+		var_bi[i] = vector_model[track].addVar(0.0, 1.0, 0.0, GRB_BINARY, "x" + to_string(i));
+	}
+	vector_model[track].setObjective(1 * var_bi[col_num - 1], GRB_MINIMIZE);
+	vector<GRBLinExpr> sum_row(row_num, 0);
+	vector<GRBLinExpr> sum_zp_dp(N, 0);
+	vector<GRBLinExpr> sum_zp_0(N, 0);
+	vector<GRBLinExpr> sum_t_star(t_star + 1, 0);
+	vector<GRBLinExpr> sum_p(N, 0);
+	for (unsigned short int i = 0; i < t_star; ++i) {
+		for (unsigned short int j = 0; j < N; ++j) {
+			sum_zp_dp[j] += var_bi[i * N + col_num + N * 2 + j] * d_t[i];
+			sum_zp_0[j] += var_bi[i * N + col_num + N * 2 + j];
+			sum_t_star[i] += var_bi[i * N + col_num + N * 2 + j];
+			sum_p[j] += var_bi[i * N + col_num + N * 2 + j];
+		}
+	}
+
+
+	for (long j = 1; j < cnt_2 + 1; ++j) {
+		sum_row[ia[j] - 1] += ar[j] * var_bi[ja[j] - 1];
+	}
+
+	for (unsigned short int i = 1; i < N + 1; ++i) {
+		vector_model[track].addConstr(var_bi[col_num + i - 1] == sum_row[i - 1] - bound[i - 1]);
+		vector_model[track].addGenConstrAbs(var_bi[col_num + N + i - 1], var_bi[col_num + i - 1]);
+		if (t_star == 0) {
+			vector_model[track].addConstr(var_bi[col_num + N + i - 1] <= var_bi[col_num - 1] + sum_zp_dp[i - 1]);
+		}
+		if (t_star > 0) {
+			vector_model[track].addQConstr(var_bi[col_num + N + i - 1] <= (1 - sum_zp_0[i - 1]) * var_bi[col_num - 1] + sum_zp_dp[i - 1]);
+		}
+	}
+
+	for (unsigned short int i = N + 1; i < N + 1 + nodeset.size(); ++i) {
+		vector_model[track].addConstr(sum_row[i - 1] == bound[i - 1]);
+	}
+	for (unsigned short int i = N + nodeset.size() + 1; i < N + 2 * (nodeset.size()) + 1; ++i) {
+		vector_model[track].addConstr(sum_row[i - 1] <= bound[i - 1]);
+	}
+	vector_model[track].addConstr(sum_row[row_num - 1] == bound[row_num - 1]);
+
+	for (unsigned short int i = 0; i < N; ++i) {
+		vector_model[track].addConstr(sum_p[i] <= 1);
+	}
+	for (unsigned short int i = 0; i < t_star; ++i) {
+		vector_model[track].addConstr(sum_t_star[i] == N_star[i]);
+	}
+
+	vector_model[track].optimize();
+
+	int optimstatus = vector_model[track].get(GRB_IntAttr_Status);
+	if (optimstatus != 2) {
+		track_not_optimal[N - 4][inst] = optimstatus;
+		if (optimstatus == 9) {
+			track_time_limit[N - 4][inst] = optimstatus;
+		}
+	}
+
+	sort_d_t(d_t, var_bi, col_num, N, Vp_start, arc_pair, target, t_star, credit, epsilon, var_lexmin, N_star);
+}
+
+void lexmin_searching(vector<double>& d_t, bool& lex_min, unsigned short int& t_star, unsigned short int& N, long& col_num, double& epsilon, unsigned short int& n_star, GRBModel& model, vector<int>& ia, vector<int>& ja, vector<double>& ar, const unsigned short int& row_num, long& cnt_2, vector<double>& bound, vector<int>& nodeset, vector<unsigned short int>& N_star, vector<unsigned short int>& Vp_start, vector<pair<int, int>>& arc_pair, vector<double>& target, vector<double>& credit, vector<GRBVar>& var_lexmin, unsigned short int inst, vector<GRBModel>& vector_model, unsigned short int& track, vector<vector<int>>& track_not_optimal, vector<vector<int>>& track_time_limit) {
+	while (lex_min && abs(d_t[t_star - 1]) > 0.5 && n_star < N) {
+		std::cout << "begin search d_t" << endl;
+		lex_min_d_star(d_t, lex_min, t_star, N, col_num, epsilon, n_star, model, ia, ja, ar, row_num, cnt_2, bound, nodeset, N_star, Vp_start, arc_pair, target, credit, var_lexmin, vector_model, track, track_not_optimal, track_time_limit, inst);
+		std::cout << "inst: " << inst << endl;
+		std::cout << "abs(d_t[t_star])" << abs(d_t[t_star]) << endl;
+		std::cout << "t_star: " << t_star << endl;
+		std::cout << "N-1: " << N - 1 << endl;
+		if (t_star == N - 1) {
+			std::cout << "N-1==t_star" << endl;
+		}
+		else {
+			std::cout << "N-1!=t_star" << endl;
+		}
+		std::cout << "epsilon in the loop: " << epsilon << endl;
+		std::cout << "absolute epsilon in the loop: " << abs(epsilon) << endl;
+		if (abs(d_t[t_star]) > 0.5) {
+			if (abs(epsilon) > pow(10, -4)) {
+				if (t_star == N - 1) {
+					std::cout << "congratulations t_star == N - 1" << endl;
+					//break
+					n_star = N;
+					std::cout << "congratulations after break" << endl;
+				}
+				else
+				{
+					if (d_t[t_star + 1] < 0.5) {
+						std::cout << "congratulations d_t[t_star + 1] < 0.5" << endl;
+						//break;
+						n_star = N;
+					}
+					else {
+						std::cout << "congratulations d_t[t_star + 1] > 0.5" << endl;
+						lex_min_n_star(d_t, lex_min, t_star, N, col_num, epsilon, n_star, model, ia, ja, ar, row_num, cnt_2, bound, nodeset, N_star, var_lexmin, vector_model, track, track_not_optimal, track_time_limit, inst);
+					}
+				}
+			}
+			if (abs(epsilon) < pow(10, -4)) {
+				std::cout << "congratulations abs(epsilon) < pow(10, -7))" << endl;
+				lexmin_searching(d_t, lex_min, t_star, N, col_num, epsilon, n_star, model, ia, ja, ar, row_num, cnt_2, bound, nodeset, N_star, Vp_start, arc_pair, target, credit, var_lexmin, inst, vector_model, track, track_not_optimal, track_time_limit);
+			}
+		}
+		else {
+			std::cout << "congratulations break" << endl;
+			//break
+			n_star = N;
+		}
+	}
+}
+
+
+void cycle_distribution(std::map<int, std::map<int, int>>& cycle_dis_period, map<int, int>& cycle_dis, vector<pair<int, int>>& cycle_distri, unsigned short int& N, unsigned short int& Q) {
+	unsigned short int i = 0;
+	while (i < cycle_distri.size()) {
+		int first, last;
+		unsigned short int cycle_length = 1;
+		first = cycle_distri[i].first;
+		last = cycle_distri[i].second;
+		cycle_distri.erase(cycle_distri.begin());
+		//cout << cycle_distri.size() << '\n' << i << endl;
+		for (unsigned short int j = i; j < cycle_distri.size(); ++j) {
+			if (last == cycle_distri[j].first) {
+				++cycle_length;
+				if (first == cycle_distri[j].second) {
+					//cout << "period " << j << " " << cycle_length << endl;
+					++cycle_dis_period[(N - 4) * 24 + Q][cycle_length];
+					//cout << "cycle_dis_period[N*(Q+1)][cycle_length]: " << cycle_dis_period[N * (Q + 1)][cycle_length] << endl;
+					++cycle_dis[cycle_length];
+					cycle_length = 1;
+					cycle_distri.erase(cycle_distri.begin() + j);
+					i = 0;
+					//cout << "i:" << i << '\n' << "j: " << j << endl;
+					break;
+				}
+				else {
+					last = cycle_distri[j].second;
+					//cout << last << endl;
+					cycle_distri.erase(cycle_distri.begin() + j);
+					j = -1;
+				}
+
+			}
+		}
+	}
+}
+
+void epsilon_func(vector<double> target, vector<double> credit, double& epsilon, unsigned short int N) {
+	vector<double> target_credit(N, 0);
+	vector<double> epsilon_sort(N * (N - 1), 0);
+	for (unsigned short int i = 0; i < N; ++i) {
+		target_credit[i] = target[i] + credit[i];
+	}
+
+	unsigned short int t = -1;
+	for (unsigned short int i = 0; i < N - 1; ++i) {
+		for (unsigned short j = i + 1; j < N; ++j) {
+			++t;
+			//cout << "target_credit[i]: " << target_credit[i] << "target_credit[j]: " << target_credit[j] << endl;
+			epsilon_sort[t] = abs(frac(target_credit[i]) - frac(target_credit[j]));
+			//cout << "a-b: " << epsilon_sort[t] << endl;
+			++t;
+			epsilon_sort[t] = abs(frac(target_credit[i]) - (1 - frac(target_credit[j])));
+			//cout << "a-(1-b): " << epsilon_sort[t] << endl;
+		}
+	}
+	cout << "t" << t << endl;
+
+	for (unsigned short int i = 0; i < epsilon_sort.size(); ++i) {
+		//cout << "epsilon_sort: " << epsilon_sort[i] << endl;
+	}
+
+	auto newEnd = std::remove_if(epsilon_sort.begin(), epsilon_sort.end(), [](double num) {
+		return num < 2 * pow(10, -4);
+		});
+	epsilon_sort.erase(newEnd, epsilon_sort.end());
+
+	std::sort(epsilon_sort.begin(), epsilon_sort.end());
+	epsilon = epsilon_sort[0];
+	cout << "epsilon_sort[0]" << epsilon_sort[0] << endl;
+}
+
+double frac(double ori) {
+	double abs_frac;
+	abs_frac = abs(ori) - abs(int(ori));
+	return abs_frac;
+}
+
+void country_sizes(unsigned short int& N, vector<unsigned short int>& Vp, vector<unsigned short int>& Vp_start, bool& dispy, unsigned short int& graph_size) {
+	unsigned short int sz = 0;
+	if (remainder(N, 2) == 0) {
+		sz = 4 * (unsigned short int)(graph_size / (6 * N));
+		for (unsigned short int i = 0; i < N / 2; i++) {
+			Vp[i] = sz;
+			Vp[N - i] = 2 * sz;
+		}
+		Vp[N / 2] = Vp[N - 1];
+	}
+	else {
+		sz = 4 * (unsigned short int)(graph_size / (8 * N));
+		if (remainder(N, 6) == 1) {
+			for (unsigned short int i = 0; i < (unsigned short int)(N / 3); i++) {
+				Vp[i] = sz;
+				Vp[N - i - 1] = 3 * sz;
+			}
+			for (unsigned short int i = (unsigned short int)(N / 3); i < 2 * (unsigned short int)(N / 3) + 1; i++)
+				Vp[i] = 2 * sz;
+		}
+		else {
+			if (remainder(N, 3) == 0) {
+				for (unsigned short int i = 0; i < (N / 3); i++) {
+					Vp[i] = sz;
+					Vp[i + N / 3] = 2 * sz;
+					Vp[N - i - 1] = 3 * sz;
+				}
+			}
+			else {
+				unsigned short int sm = ((unsigned short int)(N / 3)) + 1;
+				unsigned short int med = sm - 1;
+				unsigned short int lrg = sm;
+				for (unsigned short int i = 0; i < sm; i++) {
+					Vp[i] = sz;
+					Vp[N - i - 1] = 3 * sz;
+				}
+				for (unsigned short int i = sm; i < sm + med; i++)
+					Vp[i] = 2 * sz;
+			}
+		}
+	}
+	for (unsigned short int i = 0; i < N; i++) {
+		Vp_start[i + 1] = Vp[i] + Vp_start[i];
+	}
+	if (dispy) {
+		cout << "country sizes: ";
+		for (unsigned short int i = 0; i < N; i++) {
+			cout << Vp[i] << " ";
+		}
+		cout << endl << "starting points: ";
+		for (unsigned short int i = 0; i < N + 1; i++) {
+			cout << Vp_start[i] << " ";
+		}
+		cout << endl;
+	}
+	return;
+}
