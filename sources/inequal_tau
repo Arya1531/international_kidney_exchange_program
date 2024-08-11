@@ -1,11 +1,9 @@
 /*
 *    int_kidney_exchange
-*    tau_inequal.cpp
-*    Purpose: computational study for
-*             Benedek et al. (2021) - Computing Balanced Solutions for
-*             Large Kidney Exchange Schemes
-*             https://arxiv.org/abs/2109.06788
-*             tau value allocations with equal country sizes
+*    tau_eqsize.cpp
+*    Purpose: computational study for Computing Balanced Solutions for Large International Kidney
+*			  Exchange Schemes When Cycle Length Is Unbounded
+*             using the tau value as initial allocations with inequal country sizes
 *
 *    @developer Xin Ye
 *    @version 1.0 11/08/2024
