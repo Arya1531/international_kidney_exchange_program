@@ -2,7 +2,7 @@
 
 @version 1.0 11/08/2024
 
-Purpose: computational study for Computing Balanced Solutions for Large International Kidney Exchange Schemes When Cycle Length Is Unbounded
+Purpose: computational study for Computing Balanced Solutions for Large International Kidney Exchange Schemes When Maximum Cycle Length Is Unbounded or $3$
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version and the Gurobi License.
 
@@ -11,4 +11,14 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 We run our simulations both without and with (“+𝑐”) using the credit system. This leads to the five scenarios for each of the six selected
 solution concepts, the Shapley value, nucleolus, Banzhaf value, tau value, benefit value and contribution value.
 
-Please find the data, seeds and sources in the diretory of "international_kideney_exchange_program/data", "international_kideney_exchange_program/seeds"  and "international_kideney_exchange_program/sources" specifically.
+Please note that the data and seeds remain the same for cases where the maximum cycle length is either unbounded or $3$. They can be found under the directories:
+
+  Data: international_kidney_exchange_program/data,
+
+  Seeds: international_kidney_exchange_program/seeds.
+
+The sources are available at:
+
+  Unbounded case: international_kidney_exchange_program/sources/unbounded.zip,
+
+  Length-$3$ Case: international_kidney_exchange_program/sources/length-3.zip.
